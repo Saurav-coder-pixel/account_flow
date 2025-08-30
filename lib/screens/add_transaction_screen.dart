@@ -20,8 +20,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  app_transaction.TransactionType _selectedType =
-      app_transaction.TransactionType.credit;
+  app_transaction.TransactionType _selectedType = app_transaction.TransactionType.credit;
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -108,8 +107,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       // Amount
                       TextFormField(
                         controller: _amountController,
-                        keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           labelText: 'Amount',
                           hintText: 'Enter amount',
@@ -152,8 +150,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ListTile(
                         leading: Icon(Icons.calendar_today),
                         title: Text('Date'),
-                        subtitle: Text(DateFormat('MMM dd, yyyy')
-                            .format(_selectedDate)),
+                        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
                         onTap: _selectDate,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -214,9 +211,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         final transaction = app_transaction.Transaction(
           personId: widget.person.id!,
           amount: double.parse(_amountController.text),
-          note: _noteController.text.trim().isEmpty
-              ? null
-              : _noteController.text.trim(),
+          note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
           date: _selectedDate,
           type: _selectedType,
         );
@@ -224,7 +219,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         await Provider.of<TransactionProvider>(context, listen: false)
             .addTransaction(transaction);
 
-        // Refresh the person's balance
+        // Refresh the person's balance in the PersonProvider
         await Provider.of<PersonProvider>(context, listen: false)
             .refreshPersonBalance(widget.person.id!);
 
@@ -239,7 +234,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to add transaction. Please try again. Error: $e'),
+            content: Text('Failed to add transaction. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );

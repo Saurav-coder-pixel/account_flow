@@ -16,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _searchText = '';
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
         final List<Color> gradientColors = isCredit
             ? [Colors.green.shade700, Colors.green.shade400]
             : [Colors.red.shade700, Colors.red.shade400];
+
+        final filteredPersons = personProvider.persons.where((person) {
+          return person.name.toLowerCase().contains(_searchText.toLowerCase());
+        }).toList();
 
         return Scaffold(
           appBar: AppBar(
@@ -267,6 +273,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search People...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchText = value;
+                    });
+                  },
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
                   'Recent People',
@@ -274,14 +300,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Expanded(
-                child: personProvider.persons.isEmpty
+                child: filteredPersons.isEmpty
                     ? Center(
                   child: Text('No people added yet.'),
                 )
                     : ListView.builder(
-                  itemCount: personProvider.persons.length,
+                  itemCount: filteredPersons.length,
                   itemBuilder: (context, index) {
-                    final person = personProvider.persons[index];
+                    final person = filteredPersons[index];
                     return Card(
                       margin: EdgeInsets.symmetric(
                         horizontal: 16,
