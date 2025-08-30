@@ -16,16 +16,25 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _namesController = TextEditingController();
+  final List<TextEditingController> _nameControllers = [TextEditingController()];
   final _uuid = Uuid();
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    for (final controller in _nameControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 
   void _splitExpense() async {
     if (_formKey.currentState!.validate()) {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
       final description = _descriptionController.text;
-      final names = _namesController.text
-          .split(',')
-          .map((e) => e.trim())
+      final names = _nameControllers
+          .map((e) => e.text.trim())
           .where((e) => e.isNotEmpty)
           .toList();
 
@@ -104,7 +113,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                   Navigator.pop(context);
                   _amountController.clear();
                   _descriptionController.clear();
-                  _namesController.clear();
+                  setState(() {
+                    for (final controller in _nameControllers) {
+                      controller.clear();
+                    }
+                  });
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Expense split successfully!')),
@@ -117,6 +130,19 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         },
       );
     }
+  }
+
+  void _addPersonField() {
+    setState(() {
+      _nameControllers.add(TextEditingController());
+    });
+  }
+
+  void _removePersonField(int index) {
+    setState(() {
+      _nameControllers[index].dispose();
+      _nameControllers.removeAt(index);
+    });
   }
 
   @override
@@ -142,52 +168,88 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                    labelText: 'Amount', border: OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null ||
-                      value.isEmpty ||
-                      double.tryParse(value) == null ||
-                      double.parse(value) <= 0) {
-                    return 'Please enter a valid amount';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                    labelText: 'Description', border: OutlineInputBorder()),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _namesController,
-                decoration: InputDecoration(
-                  labelText: 'People to Split With',
-                  hintText: 'Enter names, separated by commas',
-                  border: OutlineInputBorder(),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _amountController,
+                  decoration: InputDecoration(
+                      labelText: 'Amount', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        double.tryParse(value) == null ||
+                        double.parse(value) <= 0) {
+                      return 'Please enter a valid amount';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter at least one name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-            ],
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                      labelText: 'Description', border: OutlineInputBorder()),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a description';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+                Text('People to Split With', style: Theme.of(context).textTheme.titleMedium),
+                SizedBox(height: 8),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: _nameControllers.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _nameControllers[index],
+                              decoration: InputDecoration(
+                                labelText: 'Person ${index + 1}',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter a name';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          if (_nameControllers.length > 1)
+                            IconButton(
+                              icon: Icon(Icons.remove_circle_outline),
+                              onPressed: () => _removePersonField(index),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _addPersonField,
+                  icon: Icon(Icons.add),
+                  label: Text('Add Person'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
