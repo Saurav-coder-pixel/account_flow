@@ -20,7 +20,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  app_transaction.TransactionType _selectedType = app_transaction.TransactionType.credit;
+  app_transaction.TransactionType _selectedType =
+      app_transaction.TransactionType.credit;
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -107,7 +108,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       // Amount
                       TextFormField(
                         controller: _amountController,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           labelText: 'Amount',
                           hintText: 'Enter amount',
@@ -150,7 +152,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ListTile(
                         leading: Icon(Icons.calendar_today),
                         title: Text('Date'),
-                        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
+                        subtitle: Text(DateFormat('MMM dd, yyyy')
+                            .format(_selectedDate)),
                         onTap: _selectDate,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -205,41 +208,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  // Inside _saveTransaction method in add_transaction_screen.dart
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // --- BEGIN DEBUG ---
-        print('Current Person: ${widget.person}');
-        if (widget.person == null) {
-          print('ERROR: widget.person is NULL before calling refreshPersonBalance.');
-          // Handle this error appropriately - maybe show a message to the user
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: Person data is missing.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return; // Exit the function
-        }
-        print('Current Person ID: ${widget.person.id}');
-        if (widget.person.id == null) {
-          print('ERROR: widget.person.id is NULL before calling refreshPersonBalance.');
-          // Handle this error appropriately
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: Person ID is missing.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return; // Exit the function
-        }
-        // --- END DEBUG ---
-
         final transaction = app_transaction.Transaction(
-          personId: widget.person.id!, // If id can be null, you need a fallback or different logic
+          personId: widget.person.id!,
           amount: double.parse(_amountController.text),
-          note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+          note: _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
           date: _selectedDate,
           type: _selectedType,
         );
@@ -247,9 +224,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         await Provider.of<TransactionProvider>(context, listen: false)
             .addTransaction(transaction);
 
-        // Ensure PersonProvider is available and id is not null
+        // Refresh the person's balance
         await Provider.of<PersonProvider>(context, listen: false)
-            .refreshPersonBalance(widget.person.id! as String); // Error point
+            .refreshPersonBalance(widget.person.id!);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -259,9 +236,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         );
 
         Navigator.pop(context);
-      } catch (e, stackTrace) { // Catch specific errors or print stack trace
-        print('Error in _saveTransaction: $e');
-        print('Stack trace: $stackTrace');
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to add transaction. Please try again. Error: $e'),
@@ -271,5 +246,4 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       }
     }
   }
-
 }

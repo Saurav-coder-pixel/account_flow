@@ -4,10 +4,10 @@ import '../helpers/database_helper.dart';
 
 class PersonProvider with ChangeNotifier {
 
-  Future<void> refreshPersonBalance(String personId) async{
-    print('Attempting to refresh balance for person ID: $personId');
+  Future<void> refreshPersonBalance(int personId) async{
+    notifyListeners();
   }
-  
+
   List<Person> _persons = [];
   final DatabaseHelper _dbHelper = DatabaseHelper();
 

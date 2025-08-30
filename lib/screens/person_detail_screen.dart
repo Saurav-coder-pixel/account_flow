@@ -29,107 +29,110 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.person.name),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
       body: Consumer<TransactionProvider>(
         builder: (context, transactionProvider, child) {
-          final transactions = transactionProvider.getTransactionsForPerson(widget.person.id!);
+          final transactions =
+          transactionProvider.getTransactionsForPerson(widget.person.id!);
           final balance = transactionProvider.calculateBalance(transactions);
 
-          return Column(
-            children: [
-              // Balance Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                margin: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: balance >= 0
-                        ? [Colors.green.shade400, Colors.green.shade600]
-                        : [Colors.red.shade400, Colors.red.shade600],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 200.0,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(widget.person.name,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700
+                    ),),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.7)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          child: Text(
+                            widget.person.name.isNotEmpty
+                                ? widget.person.name[0]
+                                : '',
+                            style: TextStyle(fontSize: 24),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          balance >= 0
+                              ? '₹${balance.toStringAsFixed(2)}'
+                              : '-₹${balance.abs().toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          balance >= 0 ? 'Credit' : 'Debit',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Current Balance',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      balance >= 0
-                          ? '₹${balance.toStringAsFixed(2)}'
-                          : '-₹${balance.abs().toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      balance >= 0 ? 'Credit' : 'Debit',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
                 ),
               ),
-
-              // Transactions List
-              Expanded(
-                child: transactions.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.receipt_long,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'No transactions yet',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey,
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    if (transactions.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.receipt_long,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No transactions yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Tap + to add your first transaction',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Tap + to add your first transaction',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                    : ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
+                      );
+                    }
                     final transaction = transactions[index];
                     return TransactionCard(
                       transaction: transaction,
                       onDelete: () => _deleteTransaction(transaction),
                     );
                   },
+                  childCount:
+                  transactions.isEmpty ? 1 : transactions.length,
                 ),
               ),
             ],
@@ -141,13 +144,13 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(person: widget.person),
+              builder: (context) =>
+                  AddTransactionScreen(person: widget.person),
             ),
           );
         },
         child: Icon(Icons.add),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).primaryColor,
       ),
     );
   }
@@ -173,7 +176,8 @@ class _PersonDetailScreenState extends State<PersonDetailScreen> {
                   SnackBar(content: Text('Transaction deleted successfully')),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red),
               child: Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
