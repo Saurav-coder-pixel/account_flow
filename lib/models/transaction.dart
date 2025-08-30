@@ -7,6 +7,7 @@ class Transaction {
   final String? note;
   final DateTime date;
   final TransactionType type;
+  final String? splitId;
 
   Transaction({
     this.id,
@@ -15,6 +16,7 @@ class Transaction {
     this.note,
     required this.date,
     required this.type,
+    this.splitId,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,7 @@ class Transaction {
       'note': note,
       'date': date.toIso8601String(),
       'type': type.toString().split('.').last,
+      'split_id': splitId,
     };
   }
 
@@ -36,6 +39,7 @@ class Transaction {
       note: map['note'],
       date: DateTime.parse(map['date']),
       type: map['type'] == 'credit' ? TransactionType.credit : TransactionType.debit,
+      splitId: map['split_id'],
     );
   }
 
@@ -46,6 +50,7 @@ class Transaction {
     String? note,
     DateTime? date,
     TransactionType? type,
+    String? splitId,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -54,6 +59,7 @@ class Transaction {
       note: note ?? this.note,
       date: date ?? this.date,
       type: type ?? this.type,
+      splitId: splitId ?? this.splitId,
     );
   }
 }

@@ -1,186 +1,186 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/person.dart';
-import '../providers/person_provider.dart';
-import '../providers/transaction_provider.dart';
-import '../models/transaction.dart' as app_transaction;
-import '../widgets/transaction_card.dart';
-import 'add_transaction_screen.dart';
 
-class CashbookScreen extends StatelessWidget {
+enum EntryType {
+  income,
+  expense,
+}
+
+class CashbookEntry {
+  final String id;
+  final String description;
+  final double amount;
+  final EntryType type;
+  final DateTime date;
+
+  CashbookEntry({
+    required this.id,
+    required this.description,
+    required this.amount,
+    required this.type,
+    required this.date,
+  });
+}
+
+class CashbookScreen extends StatefulWidget {
+  @override
+  _CashbookScreenState createState() => _CashbookScreenState();
+}
+
+class _CashbookScreenState extends State<CashbookScreen> {
+  final List<CashbookEntry> _entries = [];
+
+  double get _totalIncome {
+    return _entries
+        .where((entry) => entry.type == EntryType.income)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get _totalExpense {
+    return _entries
+        .where((entry) => entry.type == EntryType.expense)
+        .fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get _balance {
+    return _totalIncome - _totalExpense;
+  }
+
+  void _addEntry(String description, double amount, EntryType type) {
+    final newEntry = CashbookEntry(
+      id: DateTime.now().toString(),
+      description: description,
+      amount: amount,
+      type: type,
+      date: DateTime.now(),
+    );
+    setState(() {
+      _entries.add(newEntry);
+    });
+  }
+
+  void _deleteEntry(String id) {
+    setState(() {
+      _entries.removeWhere((entry) => entry.id == id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cashbook'),
+        title: Text('Personal Cashbook'),
       ),
-      body: Consumer<TransactionProvider>(
-        builder: (context, transactionProvider, child) {
-          final transactions = transactionProvider.transactions;
-          if (transactions.isEmpty) {
-            return Center(
-              child: Text('No transactions yet.'),
-            );
-          }
-
-          double totalCredit = 0;
-          double totalDebit = 0;
-
-          for (var transaction in transactions) {
-            if (transaction.type == app_transaction.TransactionType.credit) {
-              totalCredit += transaction.amount;
-            } else {
-              totalDebit += transaction.amount;
-            }
-          }
-
-          final totalBalance = totalCredit - totalDebit;
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            Colors.green.shade700,
-                            Colors.green.shade400
-                          ]),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Total Credit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '₹${totalCredit.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            Colors.red.shade700,
-                            Colors.red.shade400
-                          ]),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Total Debit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '₹${totalDebit.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AppBar(
-                title: Text(
-                  'Total Balance: ₹${totalBalance.toStringAsFixed(2)}',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                automaticallyImplyLeading: false,
-                centerTitle: true,
-                elevation: 0,
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = transactions[index];
-                    return TransactionCard(
-                      transaction: transaction,
-                      onDelete: () => _deleteTransaction(context, transaction),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          _buildSummary(),
+          Expanded(child: _buildEntryList()),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _selectPersonAndAddTransaction(context),
+        onPressed: () => _showAddEntryDialog(context),
         child: Icon(Icons.add),
       ),
     );
   }
 
-  void _selectPersonAndAddTransaction(BuildContext context) {
-    final personProvider = Provider.of<PersonProvider>(context, listen: false);
-    final persons = personProvider.persons;
+  Widget _buildSummary() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSummaryCard(
+              title: 'Income',
+              amount: _totalIncome,
+              color: Colors.green,
+            ),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: _buildSummaryCard(
+              title: 'Expense',
+              amount: _totalExpense,
+              color: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (persons.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please add a person first.')),
+  Widget _buildSummaryCard(
+      {required String title, required double amount, required MaterialColor color}) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [color.shade700, color.shade400]),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '₹${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEntryList() {
+    if (_entries.isEmpty) {
+      return Center(
+        child: Text('No entries yet. Tap + to add one!'),
       );
-      return;
     }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Select Person for Transaction'),
-          content: SingleChildScrollView(
-            child: Column(
+    return ListView.builder(
+      itemCount: _entries.length,
+      itemBuilder: (context, index) {
+        final entry = _entries[index];
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ListTile(
+            leading: Icon(
+              entry.type == EntryType.income
+                  ? Icons.arrow_downward
+                  : Icons.arrow_upward,
+              color: entry.type == EntryType.income ? Colors.green : Colors.red,
+            ),
+            title: Text(entry.description),
+            subtitle: Text(entry.date.toString()),
+            trailing: Row(
               mainAxisSize: MainAxisSize.min,
-              children: persons.map((person) {
-                return ListTile(
-                  title: Text(person.name),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddTransactionScreen(person: person),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
+              children: [
+                Text(
+                  '₹${entry.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: entry.type == EntryType.income
+                        ? Colors.green
+                        : Colors.red,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: Colors.grey),
+                  onPressed: () => _deleteEntry(entry.id),
+                ),
+              ],
             ),
           ),
         );
@@ -188,30 +188,76 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  void _deleteTransaction(
-      BuildContext context, app_transaction.Transaction transaction) {
+  void _showAddEntryDialog(BuildContext context) {
+    final descriptionController = TextEditingController();
+    final amountController = TextEditingController();
+    EntryType type = EntryType.expense;
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Delete Transaction'),
-          content: Text('Are you sure you want to delete this transaction?'),
+          title: Text('Add Entry'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(labelText: 'Description'),
+                    ),
+                    TextField(
+                      controller: amountController,
+                      decoration: InputDecoration(labelText: 'Amount'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Radio<EntryType>(
+                          value: EntryType.expense,
+                          groupValue: type,
+                          onChanged: (EntryType? value) {
+                            setState(() {
+                              type = value!;
+                            });
+                          },
+                        ),
+                        Text('Expense'),
+                        Radio<EntryType>(
+                          value: EntryType.income,
+                          groupValue: type,
+                          onChanged: (EntryType? value) {
+                            setState(() {
+                              type = value!;
+                            });
+                          },
+                        ),
+                        Text('Income'),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                await Provider.of<TransactionProvider>(context, listen: false)
-                    .deleteTransaction(transaction.id!);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Transaction deleted successfully')),
-                );
+              onPressed: () {
+                final description = descriptionController.text;
+                final amount = double.tryParse(amountController.text) ?? 0.0;
+                if (description.isNotEmpty && amount > 0) {
+                  _addEntry(description, amount, type);
+                  Navigator.pop(context);
+                }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
+              child: Text('Add'),
             ),
           ],
         );

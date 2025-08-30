@@ -50,6 +50,10 @@ class TransactionProvider with ChangeNotifier {
     return _transactions.where((t) => t.personId == personId).toList();
   }
 
+  List<app_transaction.Transaction> getTransactionsBySplitId(String splitId) {
+    return _transactions.where((t) => t.splitId == splitId).toList();
+  }
+
   double calculateBalance(List<app_transaction.Transaction> transactions) {
     double balance = 0.0;
     for (var transaction in transactions) {

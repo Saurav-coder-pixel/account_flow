@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/theme_provider.dart';
-import '../models/person.dart';
 import '../models/transaction.dart';
-import '../widgets/person_card.dart';
-import 'add_person_screen.dart';
+import '../models/person.dart';
 import 'history_screen.dart';
-import 'person_detail_screen.dart';
 import 'cashbook_screen.dart';
+import 'split_expense_screen.dart';
+import 'person_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -21,9 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PersonProvider>(context, listen: false).loadPersons();
       Provider.of<TransactionProvider>(context, listen: false)
           .loadAllTransactions();
+      Provider.of<PersonProvider>(context, listen: false).loadPersons();
     });
   }
 
@@ -31,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Consumer<TransactionProvider>(
-      builder: (context, transactionProvider, child) {
+    return Consumer2<TransactionProvider, PersonProvider>(
+      builder: (context, transactionProvider, personProvider, child) {
         final allTransactions = transactionProvider.transactions;
         double totalCredit = 0;
         double totalDebit = 0;
@@ -47,14 +46,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final totalBalance = totalCredit - totalDebit;
         final bool isCredit = totalBalance >= 0;
-        final Color balanceColor = isCredit ? Colors.green : Colors.red;
         final List<Color> gradientColors = isCredit
             ? [Colors.green.shade700, Colors.green.shade400]
             : [Colors.red.shade700, Colors.red.shade400];
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Account Flow', style: TextStyle(color: Colors.white ),),
+            title: Text('Account Flow'),
             elevation: 0,
             flexibleSpace: Container(
               decoration: BoxDecoration(
@@ -147,6 +145,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 ListTile(
+                  leading: Icon(Icons.call_split),
+                  title: Text('Split Expense'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SplitExpenseScreen()),
+                    );
+                  },
+                ),
+                ListTile(
                   leading: Icon(Icons.history),
                   title: Text('History'),
                   onTap: () {
@@ -178,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -255,60 +266,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Recent People',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
               Expanded(
-                child: Consumer<PersonProvider>(
-                  builder: (context, personProvider, child) {
-                    if (personProvider.persons.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.person_add,
-                              size: 64,
-                              color: Colors.grey,
+                child: personProvider.persons.isEmpty
+                    ? Center(
+                  child: Text('No people added yet.'),
+                )
+                    : ListView.builder(
+                  itemCount: personProvider.persons.length,
+                  itemBuilder: (context, index) {
+                    final person = personProvider.persons[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: gradientColors[0],
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(person.name,
+                            style:
+                            TextStyle(fontWeight: FontWeight.bold)),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  PersonDetailScreen(person: person),
                             ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No accounts yet',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                              ),
+                          );
+                        },
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditPersonDialog(context, person);
+                            } else if (value == 'delete') {
+                              _showDeleteConfirmationDialog(
+                                  context, person);
+                            }
+                          },
+                          itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Text('Edit'),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Tap + to add your first account',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Text('Delete'),
                             ),
                           ],
                         ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: personProvider.persons.length,
-                      itemBuilder: (context, index) {
-                        final person = personProvider.persons[index];
-                        return PersonCard(
-                          person: person,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PersonDetailScreen(person: person),
-                              ),
-                            );
-                          },
-                          onEdit: () => _editPerson(person),
-                          onDelete: () => _deletePerson(person),
-                        );
-                      },
+                      ),
                     );
                   },
                 ),
@@ -316,38 +340,35 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddPersonScreen()),
-              );
-              if (result == true) {
-                Provider.of<PersonProvider>(context, listen: false)
-                    .loadPersons();
-              }
-            },
+            onPressed: () => _showAddPersonDialog(context),
             child: Icon(Icons.add),
-            backgroundColor: balanceColor,
-            foregroundColor: Colors.white,
+            backgroundColor: gradientColors[0],
           ),
         );
       },
     );
   }
 
-  void _editPerson(Person person) {
-    TextEditingController controller = TextEditingController(text: person.name);
+  void _showAddPersonDialog(BuildContext context) {
+    final _nameController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Account'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: 'Name',
-              border: OutlineInputBorder(),
+          title: Text('Add Person'),
+          content: Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a name';
+                }
+                return null;
+              },
             ),
           ),
           actions: [
@@ -357,11 +378,57 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (controller.text.isNotEmpty) {
-                  final updatedPerson =
-                  person.copyWith(name: controller.text);
-                  await Provider.of<PersonProvider>(context, listen: false)
-                      .updatePerson(updatedPerson);
+                if (_formKey.currentState!.validate()) {
+                  final name = _nameController.text;
+                  final personProvider =
+                  Provider.of<PersonProvider>(context, listen: false);
+                  await personProvider.addPerson(name);
+                  Navigator.pop(context);
+                }
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditPersonDialog(BuildContext context, Person person) {
+    final _nameController = TextEditingController(text: person.name);
+    final _formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Person'),
+          content: Form(
+            key: _formKey,
+            child: TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a name';
+                }
+                return null;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  final newName = _nameController.text;
+                  final personProvider =
+                  Provider.of<PersonProvider>(context, listen: false);
+                  await personProvider
+                      .updatePerson(person.copyWith(name: newName));
                   Navigator.pop(context);
                 }
               },
@@ -373,14 +440,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _deletePerson(Person person) {
+  void _showDeleteConfirmationDialog(BuildContext context, Person person) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Delete Account'),
-          content: Text(
-              'Are you sure you want to delete ${person.name}? This will also delete all transactions for this account.'),
+          title: Text('Delete Person'),
+          content: Text('Are you sure you want to delete ${person.name}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -388,15 +454,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                await Provider.of<PersonProvider>(context, listen: false)
-                    .deletePerson(person.id!);
+                final personProvider =
+                Provider.of<PersonProvider>(context, listen: false);
+                await personProvider.deletePerson(person.id!);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Account deleted successfully')),
-                );
               },
+              child: Text('Delete'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
