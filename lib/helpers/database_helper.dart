@@ -23,9 +23,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDb,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN split_id TEXT');
+    }
   }
 
   Future<void> _createDb(Database db, int version) async {
@@ -45,6 +52,7 @@ class DatabaseHelper {
         note TEXT,
         date TEXT NOT NULL,
         type TEXT NOT NULL,
+        split_id TEXT,
         FOREIGN KEY (person_id) REFERENCES persons (id) ON DELETE CASCADE
       )
     ''');

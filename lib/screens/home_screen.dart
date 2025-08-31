@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Account Flow'),
+            title: Text('Account Flow', style: TextStyle(color: Colors.white),),
             elevation: 0,
             flexibleSpace: Container(
               decoration: BoxDecoration(
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showAddPersonDialog(context),
-            child: Icon(Icons.add),
+            child: Icon(Icons.add, color: Colors.white,),
             backgroundColor: gradientColors[0],
           ),
         );
@@ -408,7 +408,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   final name = _nameController.text;
                   final personProvider =
                   Provider.of<PersonProvider>(context, listen: false);
-                  await personProvider.addPerson(name);
+                  final newPerson = Person(name: name, createdAt: DateTime.now());
+                  await personProvider.addPerson(newPerson);
                   Navigator.pop(context);
                 }
               },

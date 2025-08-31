@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../providers/person_provider.dart';
 import '../models/person.dart';
-import '../providers/transaction_provider.dart';
 import '../models/transaction.dart' as app_transaction;
-import 'split_history_screen.dart';
+import '../providers/person_provider.dart';
+import '../providers/transaction_provider.dart';
+import './split_history_screen.dart';
 
 class SplitExpenseScreen extends StatefulWidget {
   @override
@@ -72,55 +72,73 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                   final List<String> newPersonNames = [];
 
                   for (final name in names) {
-                    try {
-                      final existingPerson = personProvider.persons
-                          .firstWhere((p) => p.name.toLowerCase() == name.toLowerCase());
+                    final existingPerson =
+                    await personProvider.findPersonByName(name);
+                    if (existingPerson != null) {
                       transactionPersons.add(existingPerson);
-                    } catch (e) {
+                    } else {
                       newPersonNames.add(name);
                     }
                   }
 
                   if (newPersonNames.isNotEmpty) {
-                    for (final name in newPersonNames) {
-                      await personProvider.addPerson(name);
-                    }
-                    await personProvider.loadPersons();
-                    for (final name in newPersonNames) {
-                      try {
-                        final newPerson = personProvider.persons
-                            .firstWhere((p) => p.name.toLowerCase() == name.toLowerCase());
-                        transactionPersons.add(newPerson);
-                      } catch (e) {
-                        // Should not happen, but as a safeguard
-                        print('Could not find newly created person: $name');
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text('New People Found'),
+                          content: Text(
+                              'The following people are not in your contacts: ${newPersonNames.join(', ')}. Do you want to add them?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text('Add and Continue'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirmed == true) {
+                      for (final name in newPersonNames) {
+                        final newPerson = Person(
+                          name: name,
+                          createdAt: DateTime.now(),
+                        );
+                        final addedPerson =
+                        await personProvider.addPerson(newPerson);
+                        transactionPersons.add(addedPerson);
                       }
+                    } else {
+                      Navigator.pop(context); // Close the split confirmation dialog
+                      return;
                     }
                   }
 
                   for (final person in transactionPersons) {
-                    final newTransaction = app_transaction.Transaction(
+                    final transaction = app_transaction.Transaction(
                       personId: person.id!,
                       amount: splitAmount,
-                      type: app_transaction.TransactionType.debit,
                       note: description,
                       date: DateTime.now(),
-                      splitId: splitId, // Add splitId to transaction
+                      type: app_transaction.TransactionType.debit,
+                      splitId: splitId,
                     );
-                    await transactionProvider.addTransaction(newTransaction);
+                    await transactionProvider.addTransaction(transaction);
+                    await personProvider.refreshPersonBalance(person.id!);
                   }
 
-                  Navigator.pop(context);
-                  _amountController.clear();
-                  _descriptionController.clear();
-                  setState(() {
-                    for (final controller in _nameControllers) {
-                      controller.clear();
-                    }
-                  });
-
+                  Navigator.pop(context); // Close the split confirmation dialog
+                  Navigator.pop(context); // Go back from SplitExpenseScreen
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Expense split successfully!')),
+                    SnackBar(
+                      content: Text('Expense split successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 },
                 child: Text('Confirm'),
@@ -132,24 +150,13 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     }
   }
 
-  void _addPersonField() {
-    setState(() {
-      _nameControllers.add(TextEditingController());
-    });
-  }
-
-  void _removePersonField(int index) {
-    setState(() {
-      _nameControllers[index].dispose();
-      _nameControllers.removeAt(index);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Split Expense'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: Icon(Icons.history),
@@ -172,92 +179,134 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextFormField(
-                  controller: _amountController,
-                  decoration: InputDecoration(
-                      labelText: 'Amount', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null ||
-                        value.isEmpty ||
-                        double.tryParse(value) == null ||
-                        double.parse(value) <= 0) {
-                      return 'Please enter a valid amount';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                      labelText: 'Description', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a description';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-                Text('People to Split With', style: Theme.of(context).textTheme.titleMedium),
-                SizedBox(height: 8),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: _nameControllers.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _nameControllers[index],
-                              decoration: InputDecoration(
-                                labelText: 'Person ${index + 1}',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter a name';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          if (_nameControllers.length > 1)
-                            IconButton(
-                              icon: Icon(Icons.remove_circle_outline),
-                              onPressed: () => _removePersonField(index),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: _addPersonField,
-                  icon: Icon(Icons.add),
-                  label: Text('Add Person'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                Card(
+                  elevation: 4,
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Expense Details',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          decoration: InputDecoration(
+                              labelText: 'Amount',
+                              border: OutlineInputBorder()),
+                          keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                          validator: (value) {
+                            if (value == null ||
+                                value.isEmpty ||
+                                double.tryParse(value) == null ||
+                                double.parse(value) <= 0) {
+                              return 'Please enter a valid amount';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: InputDecoration(
+                              labelText: 'Description',
+                              border: OutlineInputBorder()),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 16),
+                Card(
+                  elevation: 4,
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Split Between',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        SizedBox(height: 16),
+                        ..._buildNameFields(),
+                        SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _nameControllers.add(TextEditingController());
+                            });
+                          },
+                          icon: Icon(Icons.add),
+                          label: Text('Add Person'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _splitExpense,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Split Expense'),
+                ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _splitExpense,
-        label: Text('Split'),
-        icon: Icon(Icons.call_split),
-      ),
     );
+  }
+
+  List<Widget> _buildNameFields() {
+    return List.generate(_nameControllers.length, (index) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _nameControllers[index],
+                decoration: InputDecoration(
+                  labelText: 'Person ${index + 1}',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (index == 0 && (value == null || value.isEmpty)) {
+                    return 'Please enter at least one person\'s name';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            if (_nameControllers.length > 1)
+              IconButton(
+                icon: Icon(Icons.remove_circle),
+                onPressed: () {
+                  setState(() {
+                    _nameControllers[index].dispose();
+                    _nameControllers.removeAt(index);
+                  });
+                },
+              ),
+          ],
+        ),
+      );
+    });
   }
 }

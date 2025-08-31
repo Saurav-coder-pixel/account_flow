@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 enum EntryType {
   income,
@@ -74,6 +75,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
         children: [
           _buildSummary(),
           Expanded(child: _buildEntryList()),
+          _buildTotalBalanceCard(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -84,56 +86,41 @@ class _CashbookScreenState extends State<CashbookScreen> {
   }
 
   Widget _buildSummary() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSummaryCard(
-              title: 'Income',
-              amount: _totalIncome,
-              color: Colors.green,
-            ),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: _buildSummaryCard(
-              title: 'Expense',
-              amount: _totalExpense,
-              color: Colors.red,
-            ),
-          ),
-        ],
+    return Card(
+      margin: EdgeInsets.all(16.0),
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildSummaryItem('Income', _totalIncome, Colors.green),
+            _buildSummaryItem('Expense', _totalExpense, Colors.red),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-      {required String title, required double amount, required MaterialColor color}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color.shade700, color.shade400]),
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _buildTotalBalanceCard() {
+    return Card(
+      margin: EdgeInsets.fromLTRB(16, 100, 16, 16),
+      elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 100),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              'Total Balance',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
             Text(
-              '₹${amount.toStringAsFixed(2)}',
+              '₹${_balance.toStringAsFixed(2)}',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: _balance >= 0 ? Colors.green : Colors.red,
               ),
             ),
           ],
@@ -142,38 +129,54 @@ class _CashbookScreenState extends State<CashbookScreen> {
     );
   }
 
-  Widget _buildEntryList() {
-    if (_entries.isEmpty) {
-      return Center(
-        child: Text('No entries yet. Tap + to add one!'),
-      );
-    }
+  Widget _buildSummaryItem(String title, double amount, Color color) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '₹${amount.toStringAsFixed(2)}',
+          style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
+    );
+  }
 
-    return ListView.builder(
+  Widget _buildEntryList() {
+    return _entries.isEmpty
+        ? Center(
+      child: Text('No entries yet.'),
+    )
+        : ListView.builder(
       itemCount: _entries.length,
       itemBuilder: (context, index) {
         final entry = _entries[index];
+        final isIncome = entry.type == EntryType.income;
         return Card(
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
-            leading: Icon(
-              entry.type == EntryType.income
-                  ? Icons.arrow_downward
-                  : Icons.arrow_upward,
-              color: entry.type == EntryType.income ? Colors.green : Colors.red,
+            leading: CircleAvatar(
+              backgroundColor:
+              isIncome ? Colors.green.shade100 : Colors.red.shade100,
+              child: Icon(
+                isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+                color: isIncome ? Colors.green : Colors.red,
+              ),
             ),
             title: Text(entry.description),
-            subtitle: Text(entry.date.toString()),
+            subtitle: Text(DateFormat.yMMMd().format(entry.date)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '₹${entry.amount.toStringAsFixed(2)}',
+                  '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
                   style: TextStyle(
+                    color: isIncome ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
-                    color: entry.type == EntryType.income
-                        ? Colors.green
-                        : Colors.red,
                   ),
                 ),
                 IconButton(
@@ -189,77 +192,74 @@ class _CashbookScreenState extends State<CashbookScreen> {
   }
 
   void _showAddEntryDialog(BuildContext context) {
-    final descriptionController = TextEditingController();
-    final amountController = TextEditingController();
-    EntryType type = EntryType.expense;
+    final _descriptionController = TextEditingController();
+    final _amountController = TextEditingController();
+    EntryType _selectedType = EntryType.income;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Add Entry'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: descriptionController,
-                      decoration: InputDecoration(labelText: 'Description'),
-                    ),
-                    TextField(
-                      controller: amountController,
-                      decoration: InputDecoration(labelText: 'Amount'),
-                      keyboardType: TextInputType.number,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Radio<EntryType>(
-                          value: EntryType.expense,
-                          groupValue: type,
-                          onChanged: (EntryType? value) {
-                            setState(() {
-                              type = value!;
-                            });
-                          },
-                        ),
-                        Text('Expense'),
-                        Radio<EntryType>(
-                          value: EntryType.income,
-                          groupValue: type,
-                          onChanged: (EntryType? value) {
-                            setState(() {
-                              type = value!;
-                            });
-                          },
-                        ),
-                        Text('Income'),
-                      ],
-                    ),
-                  ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Add Entry'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(labelText: 'Description'),
+                  ),
+                  TextField(
+                    controller: _amountController,
+                    decoration: InputDecoration(labelText: 'Amount'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  Row(
+                    children: [
+                      Radio<EntryType>(
+                        value: EntryType.income,
+                        groupValue: _selectedType,
+                        onChanged: (type) {
+                          setState(() {
+                            _selectedType = type!;
+                          });
+                        },
+                      ),
+                      Text('Income'),
+                      Radio<EntryType>(
+                        value: EntryType.expense,
+                        groupValue: _selectedType,
+                        onChanged: (type) {
+                          setState(() {
+                            _selectedType = type!;
+                          });
+                        },
+                      ),
+                      Text('Expense'),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
                 ),
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final description = descriptionController.text;
-                final amount = double.tryParse(amountController.text) ?? 0.0;
-                if (description.isNotEmpty && amount > 0) {
-                  _addEntry(description, amount, type);
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Add'),
-            ),
-          ],
+                ElevatedButton(
+                  onPressed: () {
+                    final description = _descriptionController.text;
+                    final amount = double.tryParse(_amountController.text) ?? 0.0;
+                    if (description.isNotEmpty && amount > 0) {
+                      _addEntry(description, amount, _selectedType);
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

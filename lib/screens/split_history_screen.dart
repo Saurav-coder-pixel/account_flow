@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../providers/transaction_provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/person_provider.dart';
+import '../providers/transaction_provider.dart';
 
 class SplitHistoryScreen extends StatelessWidget {
   @override
@@ -10,12 +11,13 @@ class SplitHistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Split History'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
       body: Consumer<TransactionProvider>(
         builder: (context, transactionProvider, child) {
-          final splitTransactions = transactionProvider.transactions
-              .where((t) => t.splitId != null)
-              .toList();
+          final splitTransactions =
+          transactionProvider.transactions.where((t) => t.splitId != null).toList();
 
           if (splitTransactions.isEmpty) {
             return Center(
@@ -40,19 +42,20 @@ class SplitHistoryScreen extends StatelessWidget {
               final transactions = groupedSplits[splitId]!;
               final firstTransaction = transactions.first;
               final totalAmount = transactions.fold<double>(
-                  0, (sum, item) => sum + item.amount);
+                  0, (sum, item) => sum + item.amount * transactions.length);
               final description = firstTransaction.note;
               final date = firstTransaction.date;
 
               return Card(
-                margin: EdgeInsets.all(8.0),
+                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 4,
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        description ?? 'No Description',
+                        description ?? 'No description',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -60,33 +63,37 @@ class SplitHistoryScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Total Amount: ₹${totalAmount.toStringAsFixed(2)}',
+                        'Total: ₹${totalAmount.toStringAsFixed(2)} (Split between ${transactions.length} people)',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 4),
                       Text(
-                        'Date: ${date.day}/${date.month}/${date.year}',
+                        DateFormat('MMM dd, yyyy').format(date),
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Participants:',
                         style: TextStyle(
-                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 8),
-                      FutureBuilder<List<String>>(
-                        future:
-                        _getPersonNames(context, transactions),
+                      FutureBuilder<List<Widget>>(
+                        future: _buildParticipantList(context, transactions),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return CircularProgressIndicator();
                           }
-                          if (snapshot.hasError || !snapshot.hasData) {
-                            return Text('Error loading names');
+                          if (snapshot.hasError) {
+                            return Text('Error loading participants');
                           }
-                          return Text(
-                            'Split with: ${snapshot.data!.join(', ')}',
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: snapshot.data ?? [],
                           );
                         },
                       ),
@@ -101,18 +108,25 @@ class SplitHistoryScreen extends StatelessWidget {
     );
   }
 
-  Future<List<String>> _getPersonNames(BuildContext context,
-      List<app_transaction.Transaction> transactions) async {
+  Future<List<Widget>> _buildParticipantList(
+      BuildContext context, List<app_transaction.Transaction> transactions) async {
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
-    await personProvider.loadPersons();
-    final names = <String>[];
+    final participants = <Widget>[];
+
     for (var transaction in transactions) {
-      final person =
-      await personProvider.getPersonById(transaction.personId);
+      final person = await personProvider.getPersonById(transaction.personId);
       if (person != null) {
-        names.add(person.name);
+        participants.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            child: Text(
+              '  • ${person.name}: ₹${transaction.amount.toStringAsFixed(2)}',
+            ),
+          ),
+        );
       }
     }
-    return names;
+
+    return participants;
   }
 }

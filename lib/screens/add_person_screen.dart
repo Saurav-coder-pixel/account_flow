@@ -1,3 +1,4 @@
+import 'package:account_flow/models/person.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
@@ -101,7 +102,7 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         await Provider.of<PersonProvider>(context, listen: false)
-            .addPerson(_nameController.text.trim());
+            .addPerson(_nameController.text.trim() as Person);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

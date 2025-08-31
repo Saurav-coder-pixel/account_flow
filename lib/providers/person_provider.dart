@@ -18,15 +18,12 @@ class PersonProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addPerson(String name) async {
-    final person = Person(
-      name: name,
-      createdAt: DateTime.now(),
-    );
+  Future<Person> addPerson(Person person) async {
     final id = await _dbHelper.insertPerson(person);
     final newPerson = person.copyWith(id: id);
     _persons.add(newPerson);
     notifyListeners();
+    return newPerson;
   }
 
   Future<void> updatePerson(Person person) async {
@@ -50,5 +47,13 @@ class PersonProvider with ChangeNotifier {
 
   Future<double> getPersonBalance(int personId) async {
     return await _dbHelper.getPersonBalance(personId);
+  }
+
+  Future<Person?> findPersonByName(String name) async {
+    try {
+      return _persons.firstWhere((person) => person.name == name);
+    } catch (e) {
+      return null;
+    }
   }
 }
