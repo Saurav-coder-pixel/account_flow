@@ -20,7 +20,7 @@ class PersonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -28,7 +28,7 @@ class PersonCard extends StatelessWidget {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -39,7 +39,7 @@ class PersonCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 // Profile Avatar
@@ -60,14 +60,14 @@ class PersonCard extends StatelessWidget {
                       BoxShadow(
                         color: Colors.blue.withOpacity(0.3),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: Center(
                     child: Text(
                       person.name.isNotEmpty ? person.name[0].toUpperCase() : 'A',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -76,40 +76,38 @@ class PersonCard extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
 
                 // Person Info
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        person.name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Consumer<PersonProvider>(
-                        builder: (context, personProvider, child) {
-                          return FutureBuilder<double>(
-                            future: personProvider.getPersonBalance(person.id!),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return _buildLoadingBalance();
-                              }
-
-                              final balance = snapshot.data ?? 0.0;
-                              return _buildBalanceDisplay(balance);
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                  child: Text(
+                    person.name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
                   ),
                 ),
+
+                // Balance Display
+                Consumer<PersonProvider>(
+                  builder: (context, personProvider, child) {
+                    return FutureBuilder<double>(
+                      future: personProvider.getPersonBalance(person.id!),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _buildLoadingBalance();
+                        }
+
+                        final balance = snapshot.data ?? 0.0;
+                        return _buildBalanceDisplay(balance);
+                      },
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 8),
 
                 // Action Menu
                 Container(
@@ -139,7 +137,7 @@ class PersonCard extends StatelessWidget {
                               size: 20,
                               color: Colors.blue.shade600,
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Text(
                               'Edit',
                               style: TextStyle(
@@ -160,7 +158,7 @@ class PersonCard extends StatelessWidget {
                               size: 20,
                               color: Colors.red.shade600,
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Text(
                               'Delete',
                               style: TextStyle(
@@ -194,7 +192,7 @@ class PersonCard extends StatelessWidget {
 
   Widget _buildLoadingBalance() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
@@ -210,7 +208,7 @@ class PersonCard extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade400),
             ),
           ),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           Text(
             'Loading...',
             style: TextStyle(
@@ -231,7 +229,7 @@ class PersonCard extends StatelessWidget {
     final label = isPositive ? 'Credit' : 'Debit';
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -248,7 +246,7 @@ class PersonCard extends StatelessWidget {
             size: 16,
             color: color,
           ),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           Text(
             '₹${balance.abs().toStringAsFixed(2)}',
             style: TextStyle(
@@ -257,7 +255,7 @@ class PersonCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(

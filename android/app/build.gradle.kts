@@ -48,7 +48,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
 
         // --- THIS IS THE KEY CHANGE ---
-        minSdk = 23 // Set directly to 23 for firebase_auth compatibility
+        minSdk = flutter.minSdkVersion // Set directly to 23 for firebase_auth compatibility
 
         targetSdk = 34 // Match compileSdk for consistency
         versionCode = 1    // Or use flutter.versionCode
