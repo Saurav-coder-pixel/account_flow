@@ -13,148 +13,169 @@ class PersonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final transactionProvider = Provider.of<TransactionProvider>(context);
-    final personTransactions =
-    transactionProvider.getTransactionsForPerson(person.id!);
-    double balance = transactionProvider.calculateBalance(personTransactions);
+    return Consumer<TransactionProvider>(
+      builder: (context, transactionProvider, child) {
+        final personTransactions = transactionProvider.getTransactionsForPerson(person.id!);
+        
+        double totalCredit = 0;
+        double totalDebit = 0;
+        for (var t in personTransactions) {
+          if (t.type == app_transaction.TransactionType.credit) {
+            totalCredit += t.amount;
+          } else {
+            totalDebit += t.amount;
+          }
+        }
+        final balance = totalCredit - totalDebit;
 
-    final bool isCredit = balance >= 0;
-    final List<Color> gradientColors = isCredit
-        ? [Colors.green.shade700, Colors.green.shade400]
-        : [Colors.red.shade700, Colors.red.shade400];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(person.name),
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(person.name),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
           ),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildBalanceCard(balance, gradientColors),
-          _buildTransactionsHeader(context),
-          Expanded(
-            child: personTransactions.isEmpty
-                ? Center(
-              child: Text('No transactions yet.'),
-            )
-                : _buildTransactionsList(personTransactions),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(person: person),
-            ),
-          );
-        },
-        label: Text('Add Transaction'),
-        icon: Icon(Icons.add),
-        backgroundColor: gradientColors[0],
-      ),
-    );
-  }
-
-  Widget _buildBalanceCard(double balance, List<Color> gradientColors) {
-    return Card(
-      margin: EdgeInsets.all(16),
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          body: Column(
             children: [
-              Text(
-                'Balance:',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              Text(
-                '₹${balance.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              _buildSummaryHeader(totalCredit, totalDebit, balance),
+              const Divider(height: 1),
+              Expanded(
+                child: personTransactions.isEmpty
+                    ? const Center(child: Text('No transactions yet.'))
+                    : _buildTransactionsList(context, personTransactions, transactionProvider),
               ),
             ],
           ),
-        ),
-      ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddTransactionScreen(person: person),
+                ),
+              );
+            },
+            label: const Text('Add Entry'),
+            icon: const Icon(Icons.add),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTransactionsHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildSummaryHeader(double credit, double debit, double balance) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey.shade50,
+      child: Column(
         children: [
-          Text(
-            'Recent Transactions',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Row(
+            children: [
+              _buildSummaryItem("Total Credit", credit, Colors.green),
+              const SizedBox(width: 16),
+              _buildSummaryItem("Total Debit", debit, Colors.red),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: balance >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: balance >= 0 ? Colors.green.shade200 : Colors.red.shade200),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Running Balance",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                  ),
+                ),
+                Text(
+                  "₹${balance.abs().toStringAsFixed(2)} ${balance >= 0 ? '(Credit)' : '(Debit)'}",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionsList(
-      List<app_transaction.Transaction> transactions) {
+  Widget _buildSummaryItem(String label, double amount, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            const SizedBox(height: 4),
+            Text(
+              "₹${amount.toStringAsFixed(2)}",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionsList(BuildContext context, List<app_transaction.Transaction> transactions, TransactionProvider provider) {
     return ListView.builder(
       itemCount: transactions.length,
+      padding: const EdgeInsets.all(8),
       itemBuilder: (context, index) {
-        final transaction = transactions[index];
-        final isCredit =
-            transaction.type == app_transaction.TransactionType.credit;
-        return Card(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        final t = transactions[index];
+        final isCredit = t.type == app_transaction.TransactionType.credit;
+
+        return Dismissible(
+          key: Key(t.id.toString()),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
           ),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isCredit ? Colors.green : Colors.red,
-              child: Icon(
-                isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-                color: Colors.white,
+          onDismissed: (direction) async {
+            await provider.deleteTransaction(t.id!);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Entry deleted")));
+          },
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: isCredit ? Colors.green.shade50 : Colors.red.shade50,
+                child: Icon(
+                  isCredit ? Icons.add : Icons.remove,
+                  color: isCredit ? Colors.green : Colors.red,
+                ),
               ),
-            ),
-            title: Text(
-              '₹${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: transaction.note != null && transaction.note!.isNotEmpty
-                ? Text(transaction.note!)
-                : null,
-            trailing: Text(
-              DateFormat('MMM dd, yyyy').format(transaction.date),
+              title: Text(
+                "₹${t.amount.toStringAsFixed(2)}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
+              trailing: Text(DateFormat('dd MMM').format(t.date)),
             ),
           ),
         );

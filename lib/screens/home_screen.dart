@@ -5,6 +5,7 @@ import '../providers/transaction_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/transaction.dart';
 import '../models/person.dart';
+import '../widgets/person_card.dart';
 import 'history_screen.dart';
 import 'cashbook_screen.dart';
 import 'split_expense_screen.dart';
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Account Flow', style: TextStyle(color: Colors.white),),
+            title: const Text('Account Flow', style: TextStyle(color: Colors.white),),
             elevation: 0,
             flexibleSpace: Container(
               decoration: BoxDecoration(
@@ -77,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
+                      const Text(
                         'Total Balance',
                         style: TextStyle(
                           fontSize: 12,
@@ -87,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Text(
                         '₹${totalBalance.toStringAsFixed(2)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -133,15 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: Icon(Icons.home),
-                  title: Text('Home'),
+                  leading: const Icon(Icons.home),
+                  title: const Text('Home'),
                   onTap: () {
                     Navigator.pop(context);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.book),
-                  title: Text('Cashbook'),
+                  leading: const Icon(Icons.book),
+                  title: const Text('Cashbook'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -151,8 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.call_split),
-                  title: Text('Split Expense'),
+                  leading: const Icon(Icons.call_split),
+                  title: const Text('Split Expense'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -163,8 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.history),
-                  title: Text('History'),
+                  leading: const Icon(Icons.history),
+                  title: const Text('History'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -173,18 +174,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                Divider(),
+                const Divider(),
                 SwitchListTile(
-                  title: Text('Dark Mode'),
+                  title: const Text('Dark Mode'),
                   value: themeProvider.themeMode == ThemeMode.dark,
                   onChanged: (value) {
                     themeProvider.setTheme(value ? ThemeMode.dark : ThemeMode.light);
                   },
-                  secondary: Icon(Icons.dark_mode),
+                  secondary: const Icon(Icons.dark_mode),
                 ),
                 ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('About'),
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('About'),
                   onTap: () {
                     Navigator.pop(context);
                     _showAboutDialog();
@@ -212,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              Text(
+                              const Text(
                                 'Total Credit',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -220,10 +221,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Text(
                                 '₹${totalCredit.toStringAsFixed(2)}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -234,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -247,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              Text(
+                              const Text(
                                 'Total Debit',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -255,10 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Text(
                                 '₹${totalDebit.toStringAsFixed(2)}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -277,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search People...',
-                    prefixIcon: Icon(Icons.search),
+                    prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -301,64 +302,28 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Expanded(
                 child: filteredPersons.isEmpty
-                    ? Center(
+                    ? const Center(
                   child: Text('No people added yet.'),
                 )
                     : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: filteredPersons.length,
                   itemBuilder: (context, index) {
                     final person = filteredPersons[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: gradientColors[0],
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
+                    return PersonCard(
+                      person: person,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PersonDetailScreen(person: person),
                           ),
-                        ),
-                        title: Text(person.name,
-                            style:
-                            TextStyle(fontWeight: FontWeight.bold)),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  PersonDetailScreen(person: person),
-                            ),
-                          );
-                        },
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              _showEditPersonDialog(context, person);
-                            } else if (value == 'delete') {
-                              _showDeleteConfirmationDialog(
-                                  context, person);
-                            }
-                          },
-                          itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                            const PopupMenuItem<String>(
-                              value: 'edit',
-                              child: Text('Edit'),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'delete',
-                              child: Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      ),
+                        );
+                      },
+                      onEdit: () => _showEditPersonDialog(context, person),
+                      onDelete: () => _showDeleteConfirmationDialog(
+                          context, person),
                     );
                   },
                 ),
@@ -367,8 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showAddPersonDialog(context),
-            child: Icon(Icons.add, color: Colors.white,),
             backgroundColor: gradientColors[0],
+            child: const Icon(Icons.add, color: Colors.white,),
           ),
         );
       },
@@ -383,12 +348,12 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add Person'),
+          title: const Text('Add Person'),
           content: Form(
             key: _formKey,
             child: TextFormField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a name';
@@ -400,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -413,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
@@ -429,12 +394,12 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Person'),
+          title: const Text('Edit Person'),
           content: Form(
             key: _formKey,
             child: TextFormField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a name';
@@ -446,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -459,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -472,22 +437,29 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Delete Person'),
-          content: Text('Are you sure you want to delete ${person.name}?'),
+          title: const Text('Delete Person'),
+          content: Text('Are you sure you want to delete ${person.name}? This will also delete all their transactions.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
                 final personProvider =
                 Provider.of<PersonProvider>(context, listen: false);
+                final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+                
+                // 1. Delete person from DB and PersonProvider
                 await personProvider.deletePerson(person.id!);
+                
+                // 2. Sync TransactionProvider to remove transactions and update global totals
+                transactionProvider.removeTransactionsByPersonId(person.id!);
+                
                 Navigator.pop(context);
               },
-              child: Text('Delete'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Delete', style: TextStyle(color: Colors.white),),
             ),
           ],
         );
@@ -500,14 +472,14 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('About Account Flow'),
-          content: Text(
+          title: const Text('About Account Flow'),
+          content: const Text(
             'Account Flow is a simple khatabook app for managing personal accounts and transactions.\n\nVersion 1.0.0',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );

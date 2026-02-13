@@ -9,8 +9,7 @@ class TransactionProvider with ChangeNotifier {
   List<app_transaction.Transaction> get transactions => _transactions;
 
   Future<void> loadTransactionsByPersonId(int personId) async {
-    _transactions = await _dbHelper.getTransactionsByPersonId(personId);
-    notifyListeners();
+    await loadAllTransactions();
   }
 
   Future<void> loadAllTransactions() async {
@@ -21,7 +20,7 @@ class TransactionProvider with ChangeNotifier {
   Future<void> addTransaction(app_transaction.Transaction transaction) async {
     final id = await _dbHelper.insertTransaction(transaction);
     final newTransaction = transaction.copyWith(id: id);
-    _transactions.insert(0, newTransaction); // Add to beginning for latest first
+    _transactions.insert(0, newTransaction);
     notifyListeners();
   }
 
@@ -37,6 +36,12 @@ class TransactionProvider with ChangeNotifier {
   Future<void> deleteTransaction(int transactionId) async {
     await _dbHelper.deleteTransaction(transactionId);
     _transactions.removeWhere((transaction) => transaction.id == transactionId);
+    notifyListeners();
+  }
+
+  // New method to sync local state when a person is deleted
+  void removeTransactionsByPersonId(int personId) {
+    _transactions.removeWhere((t) => t.personId == personId);
     notifyListeners();
   }
 
