@@ -23,6 +23,8 @@ class CashbookEntry {
 }
 
 class CashbookScreen extends StatefulWidget {
+  const CashbookScreen({super.key});
+
   @override
   _CashbookScreenState createState() => _CashbookScreenState();
 }
@@ -67,123 +69,153 @@ class _CashbookScreenState extends State<CashbookScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Color> gradientColors = _balance >= 0
+        ? [Colors.green.shade700, Colors.green.shade400]
+        : [Colors.red.shade700, Colors.red.shade400];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Personal Cashbook'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildSummary(),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: _buildEntryList(),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          _buildSummary(),
-          Expanded(child: _buildEntryList()),
-          _buildTotalBalanceCard(),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEntryDialog(context),
-        child: Icon(Icons.add),
+      floatingActionButton: _buildFloatingActionButton(gradientColors),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Widget _buildHeader() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            const Text(
+              'Personal Cashbook',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSummary() {
-    return Card(
-      margin: EdgeInsets.all(16.0),
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildSummaryItem('Income', _totalIncome, Colors.green),
-            _buildSummaryItem('Expense', _totalExpense, Colors.red),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Expanded(child: _buildSummaryCard('Income', _totalIncome, Icons.arrow_upward)),
+          const SizedBox(width: 16),
+          Expanded(child: _buildSummaryCard('Expense', _totalExpense, Icons.arrow_downward)),
+        ],
       ),
     );
   }
 
-  Widget _buildTotalBalanceCard() {
-    return Card(
-      margin: EdgeInsets.fromLTRB(16, 100, 16, 16),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 100),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Total Balance',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              '₹${_balance.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: _balance >= 0 ? Colors.green : Colors.red,
+  Widget _buildSummaryCard(String title, double amount, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '₹${amount.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSummaryItem(String title, double amount, Color color) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 4),
-        Text(
-          '₹${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: color),
-        ),
-      ],
     );
   }
 
   Widget _buildEntryList() {
-    return _entries.isEmpty
-        ? Center(
-      child: Text('No entries yet.'),
-    )
-        : ListView.builder(
-      itemCount: _entries.length,
+    if (_entries.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('No entries yet.', style: TextStyle(fontSize: 18, color: Colors.grey)),
+            SizedBox(height: 8),
+            Text(
+              'Tap the + button to add your first transaction',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      itemCount: _entries.length + 1, // +1 for the total balance footer
       itemBuilder: (context, index) {
+        if (index == _entries.length) {
+          return _buildTotalBalanceFooter();
+        }
         final entry = _entries[index];
         final isIncome = entry.type == EntryType.income;
-        return Card(
-          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-              isIncome ? Colors.green.shade100 : Colors.red.shade100,
-              child: Icon(
-                isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-                color: isIncome ? Colors.green : Colors.red,
-              ),
-            ),
-            title: Text(entry.description),
-            subtitle: Text(DateFormat.yMMMd().format(entry.date)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: isIncome ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete, color: Colors.grey),
-                  onPressed: () => _deleteEntry(entry.id),
-                ),
-              ],
+        return ListTile(
+          leading: Icon(
+            isIncome ? Icons.arrow_circle_up_outlined : Icons.arrow_circle_down_outlined,
+            color: isIncome ? Colors.green : Colors.red,
+            size: 40,
+          ),
+          title: Text(entry.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(DateFormat.yMMMd().format(entry.date)),
+          trailing: Text(
+            '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: isIncome ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
         );
@@ -191,10 +223,60 @@ class _CashbookScreenState extends State<CashbookScreen> {
     );
   }
 
+  Widget _buildTotalBalanceFooter() {
+    final List<Color> gradientColors = _balance >= 0
+        ? [Colors.green.shade700, Colors.green.shade400]
+        : [Colors.red.shade700, Colors.red.shade400];
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16, bottom: 80), // Adjust bottom margin to avoid FAB overlap
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                'Total Balance',
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          Text(
+            '₹${_balance.toStringAsFixed(2)}',
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildFloatingActionButton(List<Color> gradientColors) {
+    return FloatingActionButton.extended(
+      onPressed: () => _showAddEntryDialog(context),
+      label: const Text('Add Transaction'),
+      icon: const Icon(Icons.add),
+      backgroundColor: Colors.white,
+      foregroundColor: gradientColors[0],
+    );
+  }
+
   void _showAddEntryDialog(BuildContext context) {
-    final _descriptionController = TextEditingController();
-    final _amountController = TextEditingController();
-    EntryType _selectedType = EntryType.income;
+    final _formKey = GlobalKey<FormState>();
+    final descriptionController = TextEditingController();
+    final amountController = TextEditingController();
+    EntryType selectedType = EntryType.income;
 
     showDialog(
       context: context,
@@ -202,60 +284,81 @@ class _CashbookScreenState extends State<CashbookScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Add Entry'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
-                  ),
-                  TextField(
-                    controller: _amountController,
-                    decoration: InputDecoration(labelText: 'Amount'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  Row(
-                    children: [
-                      Radio<EntryType>(
-                        value: EntryType.income,
-                        groupValue: _selectedType,
-                        onChanged: (type) {
-                          setState(() {
-                            _selectedType = type!;
-                          });
-                        },
-                      ),
-                      Text('Income'),
-                      Radio<EntryType>(
-                        value: EntryType.expense,
-                        groupValue: _selectedType,
-                        onChanged: (type) {
-                          setState(() {
-                            _selectedType = type!;
-                          });
-                        },
-                      ),
-                      Text('Expense'),
-                    ],
-                  ),
-                ],
+              title: const Text('Add Entry'),
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(labelText: 'Description'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a description.';
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: amountController,
+                      decoration: const InputDecoration(labelText: 'Amount'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter an amount.';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid number.';
+                        }
+                        if (double.parse(value) <= 0) {
+                          return 'Please enter an amount greater than zero.';
+                        }
+                        return null;
+                      },
+                    ),
+                    Row(
+                      children: [
+                        Radio<EntryType>(
+                          value: EntryType.income,
+                          groupValue: selectedType,
+                          onChanged: (type) {
+                            setState(() {
+                              selectedType = type!;
+                            });
+                          },
+                        ),
+                        const Text('Income'),
+                        Radio<EntryType>(
+                          value: EntryType.expense,
+                          groupValue: selectedType,
+                          onChanged: (type) {
+                            setState(() {
+                              selectedType = type!;
+                            });
+                          },
+                        ),
+                        const Text('Expense'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    final description = _descriptionController.text;
-                    final amount = double.tryParse(_amountController.text) ?? 0.0;
-                    if (description.isNotEmpty && amount > 0) {
-                      _addEntry(description, amount, _selectedType);
+                    if (_formKey.currentState!.validate()) {
+                      final description = descriptionController.text;
+                      final amount = double.parse(amountController.text);
+                      _addEntry(description, amount, selectedType);
                       Navigator.pop(context);
                     }
                   },
-                  child: Text('Add'),
+                  child: const Text('Add'),
                 ),
               ],
             );

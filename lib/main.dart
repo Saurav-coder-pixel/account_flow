@@ -11,6 +11,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -29,7 +31,6 @@ class MyApp extends StatelessWidget {
             ),
             darkTheme: ThemeData.dark().copyWith(
               primaryColor: Colors.blue,
-              useMaterial3: true,
             ),
             themeMode: themeProvider.themeMode,
             home: SplashScreen(),
@@ -40,3 +41,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
