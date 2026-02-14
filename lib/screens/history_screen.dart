@@ -4,6 +4,8 @@ import '../providers/transaction_provider.dart';
 import '../providers/person_provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import 'package:intl/intl.dart';
+import 'add_transaction_screen.dart';
+import '../models/person.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -13,7 +15,7 @@ class HistoryScreen extends StatelessWidget {
     return Consumer2<TransactionProvider, PersonProvider>(
       builder: (context, transactionProvider, personProvider, child) {
         final transactions = transactionProvider.transactions;
-        final personMap = {for (var p in personProvider.persons) p.id: p.name};
+        final persons = personProvider.persons;
 
         double totalCredit = 0;
         double totalDebit = 0;
@@ -77,7 +79,7 @@ class HistoryScreen extends StatelessWidget {
                         ],
                       ),
                     )
-                        : _buildTransactionListView(context, sortedDates, groupedTransactions, personMap.cast<String?, String>(), transactionProvider),
+                        : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider),
                   ),
                 ),
               ],
@@ -116,7 +118,7 @@ class HistoryScreen extends StatelessWidget {
       BuildContext context,
       List<DateTime> sortedDates,
       Map<DateTime, List<app_transaction.Transaction>> groupedTransactions,
-      Map<String?, String> personMap,
+      List<Person> persons,
       TransactionProvider transactionProvider
       ) {
     return ListView.builder(
@@ -140,7 +142,7 @@ class HistoryScreen extends StatelessWidget {
               ),
             ),
             ...transactionsOnDate.map((transaction) {
-              final personName = personMap[transaction.personId] ?? 'Unknown Person';
+              final person = persons.firstWhere((p) => p.id == transaction.personId, orElse: () => Person(id: 0, name: 'Unknown Person', createdAt: DateTime.now()));
               final isCredit = transaction.type == app_transaction.TransactionType.credit;
 
               return Dismissible(
@@ -165,7 +167,7 @@ class HistoryScreen extends StatelessWidget {
                     size: 40,
                   ),
                   title: Text(
-                    personName,
+                    person.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
@@ -192,6 +194,14 @@ class HistoryScreen extends StatelessWidget {
                       color: isCredit ? Colors.green : Colors.red,
                     ),
                   ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddTransactionScreen(person: person, transaction: transaction),
+                      ),
+                    );
+                  },
                 ),
               );
             }).toList(),

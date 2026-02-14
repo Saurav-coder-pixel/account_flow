@@ -8,8 +8,9 @@ import '../providers/person_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final Person person;
+  final app_transaction.Transaction? transaction;
 
-  AddTransactionScreen({required this.person});
+  AddTransactionScreen({required this.person, this.transaction});
 
   @override
   _AddTransactionScreenState createState() => _AddTransactionScreenState();
@@ -22,6 +23,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   app_transaction.TransactionType _selectedType = app_transaction.TransactionType.credit;
   DateTime _selectedDate = DateTime.now();
+  bool get _isEditing => widget.transaction != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final transaction = widget.transaction!;
+      _amountController.text = transaction.amount.toString();
+      _noteController.text = transaction.note ?? '';
+      _selectedType = transaction.type;
+      _selectedDate = transaction.date;
+    }
+  }
 
   @override
   void dispose() {
@@ -34,9 +48,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Transaction'),
+        title: Text(_isEditing ? 'Edit Transaction' : 'Add Transaction'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _deleteTransaction,
+            ),
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
@@ -177,7 +198,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                 ),
                 child: Text(
-                  'Add ${_selectedType == app_transaction.TransactionType.credit ? 'Credit' : 'Debit'}',
+                  _isEditing
+                      ? 'Save Changes'
+                      : 'Add ${_selectedType == app_transaction.TransactionType.credit ? 'Credit' : 'Debit'}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -208,24 +231,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final transaction = app_transaction.Transaction(
-          personId: widget.person.id!,
-          amount: double.parse(_amountController.text),
-          note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
-          date: _selectedDate,
-          type: _selectedType,
-        );
+        final amount = double.parse(_amountController.text);
+        final note = _noteController.text.trim().isEmpty ? null : _noteController.text.trim();
 
-        await Provider.of<TransactionProvider>(context, listen: false)
-            .addTransaction(transaction);
+        if (_isEditing) {
+          final updatedTransaction = widget.transaction!.copyWith(
+            amount: amount,
+            note: note,
+            date: _selectedDate,
+            type: _selectedType,
+          );
+          await Provider.of<TransactionProvider>(context, listen: false)
+              .updateTransaction(updatedTransaction);
+        } else {
+          final newTransaction = app_transaction.Transaction(
+            personId: widget.person.id!,
+            amount: amount,
+            note: note,
+            date: _selectedDate,
+            type: _selectedType,
+          );
+          await Provider.of<TransactionProvider>(context, listen: false)
+              .addTransaction(newTransaction);
+        }
 
-        // Refresh the person's balance in the PersonProvider
         await Provider.of<PersonProvider>(context, listen: false)
             .refreshPersonBalance(widget.person.id!);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Transaction added successfully!'),
+            content: Text('Transaction ${_isEditing ? 'updated' : 'added'} successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -235,7 +270,54 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to add transaction. Please try again.'),
+            content: Text('Failed to ${_isEditing ? 'update' : 'add'} transaction. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _deleteTransaction() async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Transaction'),
+        content: Text('Are you sure you want to delete this transaction?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await Provider.of<TransactionProvider>(context, listen: false)
+            .deleteTransaction(widget.transaction!.id!);
+
+        await Provider.of<PersonProvider>(context, listen: false)
+            .refreshPersonBalance(widget.person.id!);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Transaction deleted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pop(context);
+      } catch (e) {
+        print(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete transaction. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
