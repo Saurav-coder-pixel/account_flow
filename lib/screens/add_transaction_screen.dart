@@ -46,169 +46,231 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Transaction' : 'Add Transaction'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          if (_isEditing)
-            IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: _deleteTransaction,
+    return Consumer2<TransactionProvider, PersonProvider>(
+      builder: (context, transactionProvider, personProvider, child) {
+        final transactions = transactionProvider.transactions;
+        double totalCredit = 0;
+        double totalDebit = 0;
+        for (var transaction in transactions) {
+          if (transaction.type == app_transaction.TransactionType.credit) {
+            totalCredit += transaction.amount;
+          } else {
+            totalDebit += transaction.amount;
+          }
+        }
+        final totalBalance = totalCredit - totalDebit;
+
+        final List<Color> gradientColors = totalBalance >= 0
+            ? [Colors.green.shade700, Colors.green.shade400]
+            : [Colors.red.shade700, Colors.red.shade400];
+
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Transaction for ${widget.person.name}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+            child: Column(
+              children: [
+                _buildHeader(context),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
                       ),
-                      SizedBox(height: 16),
-
-                      // Transaction Type
-                      Text(
-                        'Transaction Type',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RadioListTile<app_transaction.TransactionType>(
-                              title: Text('Credit'),
-                              subtitle: Text('Money given'),
-                              value: app_transaction.TransactionType.credit,
-                              groupValue: _selectedType,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedType = value!;
-                                });
-                              },
-                              activeColor: Colors.green,
-                            ),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Card(
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: Colors.grey.shade200),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Transaction for ${widget.person.name}',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Transaction Type',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: RadioListTile<app_transaction.TransactionType>(
+                                              title: const Text('Credit'),
+                                              subtitle: const Text('Money given'),
+                                              value: app_transaction.TransactionType.credit,
+                                              groupValue: _selectedType,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _selectedType = value!;
+                                                });
+                                              },
+                                              activeColor: Colors.green,
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: RadioListTile<app_transaction.TransactionType>(
+                                              title: const Text('Debit'),
+                                              subtitle: const Text('Money received'),
+                                              value: app_transaction.TransactionType.debit,
+                                              groupValue: _selectedType,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _selectedType = value!;
+                                                });
+                                              },
+                                              activeColor: Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _amountController,
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: InputDecoration(
+                                          labelText: 'Amount',
+                                          hintText: 'Enter amount',
+                                          prefixIcon: const Icon(Icons.currency_rupee),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.trim().isEmpty) {
+                                            return 'Please enter an amount';
+                                          }
+                                          final amount = double.tryParse(value);
+                                          if (amount == null || amount <= 0) {
+                                            return 'Please enter a valid amount';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _noteController,
+                                        maxLines: 3,
+                                        decoration: InputDecoration(
+                                          labelText: 'Note (Optional)',
+                                          hintText: 'Enter transaction details',
+                                          prefixIcon: const Icon(Icons.note),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ListTile(
+                                        leading: const Icon(Icons.calendar_today),
+                                        title: const Text('Date'),
+                                        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
+                                        onTap: _selectDate,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          side: BorderSide(color: Colors.grey.shade400),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: _saveTransaction,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _selectedType == app_transaction.TransactionType.credit
+                                      ? Colors.green
+                                      : Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Text(
+                                  _isEditing
+                                      ? 'Save Changes'
+                                      : 'Add ${_selectedType == app_transaction.TransactionType.credit ? 'Credit' : 'Debit'}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          Expanded(
-                            child: RadioListTile<app_transaction.TransactionType>(
-                              title: Text('Debit'),
-                              subtitle: Text('Money received'),
-                              value: app_transaction.TransactionType.debit,
-                              groupValue: _selectedType,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedType = value!;
-                                });
-                              },
-                              activeColor: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 16),
-
-                      // Amount
-                      TextFormField(
-                        controller: _amountController,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          hintText: 'Enter amount',
-                          prefixIcon: Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter an amount';
-                          }
-                          final amount = double.tryParse(value);
-                          if (amount == null || amount <= 0) {
-                            return 'Please enter a valid amount';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      SizedBox(height: 16),
-
-                      // Note
-                      TextFormField(
-                        controller: _noteController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: 'Note (Optional)',
-                          hintText: 'Enter transaction details',
-                          prefixIcon: Icon(Icons.note),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                         ),
                       ),
-
-                      SizedBox(height: 16),
-
-                      // Date
-                      ListTile(
-                        leading: Icon(Icons.calendar_today),
-                        title: Text('Date'),
-                        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
-                        onTap: _selectDate,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: Colors.grey.shade400),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-
-              SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: _saveTransaction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedType == app_transaction.TransactionType.credit
-                      ? Colors.green
-                      : Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  _isEditing
-                      ? 'Save Changes'
-                      : 'Add ${_selectedType == app_transaction.TransactionType.credit ? 'Credit' : 'Debit'}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Text(
+                  _isEditing ? 'Edit Transaction' : 'Add Transaction',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            if (_isEditing)
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.white),
+                onPressed: _deleteTransaction,
+              ),
+          ],
         ),
       ),
     );
@@ -282,16 +344,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Transaction'),
-        content: Text('Are you sure you want to delete this transaction?'),
+        title: const Text('Delete Transaction'),
+        content: const Text('Are you sure you want to delete this transaction?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -306,17 +368,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             .refreshPersonBalance(widget.person.id!);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Transaction deleted successfully!'),
             backgroundColor: Colors.green,
           ),
         );
 
-        Navigator.pop(context);
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to delete transaction. Please try again.'),
             backgroundColor: Colors.red,
           ),

@@ -156,34 +156,58 @@ class PersonDetailScreen extends StatelessWidget {
         final t = transactions[index];
         final isCredit = t.type == app_transaction.TransactionType.credit;
 
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: Colors.grey.shade200),
-          ),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isCredit ? Colors.green.shade50 : Colors.red.shade50,
-              child: Icon(
-                isCredit ? Icons.add : Icons.remove,
-                color: isCredit ? Colors.green : Colors.red,
-              ),
-            ),
-            title: Text(
-              "₹${t.amount.toStringAsFixed(2)}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
-            trailing: Text(DateFormat('dd MMM, hh:mm a').format(t.date)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddTransactionScreen(person: person, transaction: t),
+        return Dismissible(
+          key: Key(t.id.toString()),
+          direction: DismissDirection.endToStart,
+          onDismissed: (direction) {
+            provider.deleteTransaction(t.id!);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text("Transaction deleted"),
+                action: SnackBarAction(
+                  label: "Undo",
+                  onPressed: () {
+                    provider.addTransaction(t);
+                  },
                 ),
-              );
-            },
+              ),
+            );
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: isCredit ? Colors.green.shade50 : Colors.red.shade50,
+                child: Icon(
+                  isCredit ? Icons.add : Icons.remove,
+                  color: isCredit ? Colors.green : Colors.red,
+                ),
+              ),
+              title: Text(
+                "₹${t.amount.toStringAsFixed(2)}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
+              trailing: Text(DateFormat('dd MMM, hh:mm a').format(t.date)),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddTransactionScreen(person: person, transaction: t),
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

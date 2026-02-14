@@ -157,7 +157,15 @@ class HistoryScreen extends StatelessWidget {
                 onDismissed: (direction) {
                   transactionProvider.deleteTransaction(transaction.id!);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Transaction deleted')),
+                    SnackBar(
+                      content: const Text("Transaction deleted"),
+                      action: SnackBarAction(
+                        label: "Undo",
+                        onPressed: () {
+                          transactionProvider.addTransaction(transaction);
+                        },
+                      ),
+                    ),
                   );
                 },
                 child: ListTile(
