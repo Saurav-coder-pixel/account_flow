@@ -6,11 +6,13 @@ import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
 
 class SplitHistoryScreen extends StatelessWidget {
+  const SplitHistoryScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Split History'),
+        title: const Text('Split History'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -20,7 +22,7 @@ class SplitHistoryScreen extends StatelessWidget {
           transactionProvider.transactions.where((t) => t.splitId != null).toList();
 
           if (splitTransactions.isEmpty) {
-            return Center(
+            return const Center(
               child: Text('No split expenses yet.'),
             );
           }
@@ -47,7 +49,7 @@ class SplitHistoryScreen extends StatelessWidget {
               final date = firstTransaction.date;
 
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 elevation: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -56,40 +58,40 @@ class SplitHistoryScreen extends StatelessWidget {
                     children: [
                       Text(
                         description ?? 'No description',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Total: ₹${totalAmount.toStringAsFixed(2)} (Split between ${transactions.length} people)',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        DateFormat('MMM dd, yyyy').format(date),
+                        DateFormat('MMM dd, yyyy • hh:mm a').format(date),
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
-                      SizedBox(height: 12),
-                      Text(
+                      const SizedBox(height: 12),
+                      const Text(
                         'Participants:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       FutureBuilder<List<Widget>>(
                         future: _buildParticipantList(context, transactions),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return CircularProgressIndicator();
+                            return const CircularProgressIndicator();
                           }
                           if (snapshot.hasError) {
-                            return Text('Error loading participants');
+                            return const Text('Error loading participants');
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

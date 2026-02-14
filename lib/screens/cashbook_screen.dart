@@ -209,7 +209,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
             size: 40,
           ),
           title: Text(entry.description, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(DateFormat.yMMMd().format(entry.date)),
+          subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date)),
           trailing: Text(
             '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
             style: TextStyle(

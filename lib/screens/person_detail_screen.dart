@@ -9,14 +9,14 @@ import 'add_transaction_screen.dart';
 class PersonDetailScreen extends StatelessWidget {
   final Person person;
 
-  const PersonDetailScreen({required this.person});
+  const PersonDetailScreen({super.key, required this.person});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<TransactionProvider>(
       builder: (context, transactionProvider, child) {
         final personTransactions = transactionProvider.getTransactionsForPerson(person.id!);
-        
+
         double totalCredit = 0;
         double totalDebit = 0;
         for (var t in personTransactions) {
@@ -28,11 +28,24 @@ class PersonDetailScreen extends StatelessWidget {
         }
         final balance = totalCredit - totalDebit;
 
+        final List<Color> gradientColors = balance >= 0
+            ? [Colors.green.shade700, Colors.green.shade400]
+            : [Colors.red.shade700, Colors.red.shade400];
+
         return Scaffold(
           appBar: AppBar(
             title: Text(person.name),
-            backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
+            elevation: 0,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
           ),
           body: Column(
             children: [
@@ -175,7 +188,7 @@ class PersonDetailScreen extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
-              trailing: Text(DateFormat('dd MMM').format(t.date)),
+              trailing: Text(DateFormat('dd MMM, hh:mm a').format(t.date)),
             ),
           ),
         );

@@ -168,7 +168,22 @@ class HistoryScreen extends StatelessWidget {
                     personName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(transaction.note ?? (isCredit ? "Credit" : "Debit")),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(transaction.note ?? (isCredit ? "Credit" : "Debit")),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          DateFormat('hh:mm a').format(transaction.date),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   trailing: Text(
                     '${isCredit ? '+' : '-'} ₹${transaction.amount.toStringAsFixed(2)}',
                     style: TextStyle(
