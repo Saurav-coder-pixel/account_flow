@@ -6,6 +6,7 @@ import '../models/transaction.dart' as app_transaction;
 import 'package:intl/intl.dart';
 import 'add_transaction_screen.dart';
 import '../models/person.dart';
+import '../widgets/app_drawer.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -44,73 +45,36 @@ class HistoryScreen extends StatelessWidget {
         final sortedDates = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
 
         return Scaffold(
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          appBar: AppBar(
+            title: const Text('Transaction History', style: TextStyle(color: Colors.white),),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
+          ),
+          drawer: AppDrawer(gradientColors: gradientColors),
+          body: transactions.isEmpty
+              ? const Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildHeader(context),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: transactions.isEmpty
-                        ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('No transactions yet.', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                          SizedBox(height: 8),
-                          Text(
-                            'Your transaction history will appear here.',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    )
-                        : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider),
-                  ),
+                Text('No transactions yet.', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                SizedBox(height: 8),
+                Text(
+                  'Your transaction history will appear here.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
-          ),
+          )
+              : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider),
         );
       },
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            const Text(
-              'Transaction History',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

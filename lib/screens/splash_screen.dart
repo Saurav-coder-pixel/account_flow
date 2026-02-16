@@ -5,6 +5,8 @@ import '../providers/transaction_provider.dart';
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -19,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
@@ -43,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     ]);
 
     // Wait for splash animation to complete
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2));
 
     // Navigate to home screen
     if (mounted) {
@@ -77,13 +79,13 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ],
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.account_balance_wallet,
                   size: 60,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Text(
                 'Account Flow',
                 style: TextStyle(
@@ -92,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
                   color: Colors.blue.shade800,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 'Manage Your Accounts Simply',
                 style: TextStyle(
@@ -100,8 +102,8 @@ class _SplashScreenState extends State<SplashScreen>
                   color: Colors.grey.shade600,
                 ),
               ),
-              SizedBox(height: 50),
-              CircularProgressIndicator(
+              const SizedBox(height: 50),
+              const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
               ),
             ],

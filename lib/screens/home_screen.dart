@@ -6,12 +6,12 @@ import '../providers/theme_provider.dart';
 import '../models/transaction.dart';
 import '../models/person.dart';
 import '../widgets/person_card.dart';
-import 'history_screen.dart';
-import 'cashbook_screen.dart';
-import 'split_expense_screen.dart';
 import 'person_detail_screen.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -31,8 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Consumer2<TransactionProvider, PersonProvider>(
       builder: (context, transactionProvider, personProvider, child) {
         final allTransactions = transactionProvider.transactions;
@@ -100,100 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          drawer: Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Account Flow',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.home),
-                  title: const Text('Home'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.book),
-                  title: const Text('Cashbook'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CashbookScreen()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.call_split),
-                  title: const Text('Split Expense'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SplitExpenseScreen()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.history),
-                  title: const Text('History'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HistoryScreen()),
-                    );
-                  },
-                ),
-                const Divider(),
-                SwitchListTile(
-                  title: const Text('Dark Mode'),
-                  value: themeProvider.themeMode == ThemeMode.dark,
-                  onChanged: (value) {
-                    themeProvider.setTheme(value ? ThemeMode.dark : ThemeMode.light);
-                  },
-                  secondary: const Icon(Icons.dark_mode),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('About'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showAboutDialog();
-                  },
-                ),
-              ],
-            ),
-          ),
+          drawer: AppDrawer(gradientColors: gradientColors),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -341,8 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAddPersonDialog(BuildContext context) {
-    final _nameController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -350,9 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text('Add Person'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: TextFormField(
-              controller: _nameController,
+              controller: nameController,
               decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -369,8 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  final name = _nameController.text;
+                if (formKey.currentState!.validate()) {
+                  final name = nameController.text;
                   final personProvider =
                   Provider.of<PersonProvider>(context, listen: false);
                   final newPerson = Person(name: name, createdAt: DateTime.now());
@@ -387,8 +292,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showEditPersonDialog(BuildContext context, Person person) {
-    final _nameController = TextEditingController(text: person.name);
-    final _formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: person.name);
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -396,9 +301,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text('Edit Person'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: TextFormField(
-              controller: _nameController,
+              controller: nameController,
               decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -415,8 +320,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  final newName = _nameController.text;
+                if (formKey.currentState!.validate()) {
+                  final newName = nameController.text;
                   final personProvider =
                   Provider.of<PersonProvider>(context, listen: false);
                   await personProvider
@@ -449,37 +354,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 final personProvider =
                 Provider.of<PersonProvider>(context, listen: false);
                 final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-                
+
                 // 1. Delete person from DB and PersonProvider
                 await personProvider.deletePerson(person.id!);
-                
+
                 // 2. Sync TransactionProvider to remove transactions and update global totals
                 transactionProvider.removeTransactionsByPersonId(person.id!);
-                
+
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('Delete', style: TextStyle(color: Colors.white),),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('About Account Flow'),
-          content: const Text(
-            'Account Flow is a simple khatabook app for managing personal accounts and transactions.\n\nVersion 1.0.0',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
             ),
           ],
         );

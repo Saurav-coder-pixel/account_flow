@@ -10,7 +10,7 @@ class AddTransactionScreen extends StatefulWidget {
   final Person person;
   final app_transaction.Transaction? transaction;
 
-  AddTransactionScreen({required this.person, this.transaction});
+  const AddTransactionScreen({super.key, required this.person, this.transaction});
 
   @override
   _AddTransactionScreenState createState() => _AddTransactionScreenState();

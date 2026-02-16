@@ -1,145 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../models/person.dart';
+import '../models/transaction.dart' as app_transaction;
+import '../providers/person_provider.dart';
+import '../providers/transaction_provider.dart';
+import '../widgets/app_drawer.dart';
 
-enum EntryType {
-  income,
-  expense,
-}
-
-class CashbookEntry {
-  final String id;
-  final String description;
-  final double amount;
-  final EntryType type;
-  final DateTime date;
-
-  CashbookEntry({
-    required this.id,
-    required this.description,
-    required this.amount,
-    required this.type,
-    required this.date,
-  });
-}
-
-class CashbookScreen extends StatefulWidget {
+class CashbookScreen extends StatelessWidget {
   const CashbookScreen({super.key});
 
-  @override
-  _CashbookScreenState createState() => _CashbookScreenState();
-}
-
-class _CashbookScreenState extends State<CashbookScreen> {
-  final List<CashbookEntry> _entries = [];
-
-  double get _totalIncome {
-    return _entries
-        .where((entry) => entry.type == EntryType.income)
-        .fold(0.0, (sum, item) => sum + item.amount);
-  }
-
-  double get _totalExpense {
-    return _entries
-        .where((entry) => entry.type == EntryType.expense)
-        .fold(0.0, (sum, item) => sum + item.amount);
-  }
-
-  double get _balance {
-    return _totalIncome - _totalExpense;
-  }
-
-  void _addEntry(String description, double amount, EntryType type) {
-    final newEntry = CashbookEntry(
-      id: DateTime.now().toString(),
-      description: description,
-      amount: amount,
-      type: type,
-      date: DateTime.now(),
-    );
-    setState(() {
-      _entries.add(newEntry);
-    });
-  }
-
-  void _deleteEntry(String id) {
-    setState(() {
-      _entries.removeWhere((entry) => entry.id == id);
-    });
+  Future<Person> _findOrCreateCashbookPerson(PersonProvider personProvider) async {
+    const cashbookPersonName = 'Personal Cashbook';
+    Person? person = await personProvider.findPersonByName(cashbookPersonName);
+    person ??= await personProvider.addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now()));
+    return person;
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Color> gradientColors = _balance >= 0
-        ? [Colors.green.shade700, Colors.green.shade400]
-        : [Colors.red.shade700, Colors.red.shade400];
+    final personProvider = Provider.of<PersonProvider>(context, listen: false);
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildSummary(),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+    return FutureBuilder<Person>(
+      future: _findOrCreateCashbookPerson(personProvider),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Personal Cashbook')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final cashbookPerson = snapshot.data!;
+
+        return Consumer<TransactionProvider>(
+          builder: (context, transactionProvider, child) {
+            final entries = transactionProvider.getTransactionsForPerson(cashbookPerson.id!);
+
+            final totalIncome = entries
+                .where((e) => e.type == app_transaction.TransactionType.credit)
+                .fold(0.0, (sum, item) => sum + item.amount);
+
+            final totalExpense = entries
+                .where((e) => e.type == app_transaction.TransactionType.debit)
+                .fold(0.0, (sum, item) => sum + item.amount);
+
+            final balance = totalIncome - totalExpense;
+
+            final List<Color> gradientColors = balance >= 0
+                ? [Colors.green.shade700, Colors.green.shade400]
+                : [Colors.red.shade700, Colors.red.shade400];
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Personal Cashbook', style: TextStyle(color: Colors.white)),
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                 ),
-                child: _buildEntryList(),
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: _buildFloatingActionButton(gradientColors),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+              drawer: AppDrawer(gradientColors: gradientColors),
+              body: Column(
+                children: [
+                  _buildSummary(context, totalIncome, totalExpense, balance),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(30),
+                          topRight: Radius.circular(30),
+                        ),
+                      ),
+                      child: _buildEntryList(entries, balance),
+                    ),
+                  ),
+                ],
+              ),
+              floatingActionButton: _buildFloatingActionButton(context, cashbookPerson, gradientColors),
+              floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
-    return SafeArea(
+  Widget _buildSummary(BuildContext context, double totalIncome, double totalExpense, double balance) {
+    final List<Color> gradientColors = balance >= 0
+        ? [Colors.green.shade700, Colors.green.shade400]
+        : [Colors.red.shade700, Colors.red.shade400];
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            const Text(
-              'Personal Cashbook',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Expanded(child: _buildSummaryCard('Income', totalIncome, Icons.arrow_upward)),
+            const SizedBox(width: 16),
+            Expanded(child: _buildSummaryCard('Expense', totalExpense, Icons.arrow_downward)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSummary() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(child: _buildSummaryCard('Income', _totalIncome, Icons.arrow_upward)),
-          const SizedBox(width: 16),
-          Expanded(child: _buildSummaryCard('Expense', _totalExpense, Icons.arrow_downward)),
-        ],
       ),
     );
   }
@@ -178,8 +151,8 @@ class _CashbookScreenState extends State<CashbookScreen> {
     );
   }
 
-  Widget _buildEntryList() {
-    if (_entries.isEmpty) {
+  Widget _buildEntryList(List<app_transaction.Transaction> entries, double balance) {
+    if (entries.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -194,21 +167,24 @@ class _CashbookScreenState extends State<CashbookScreen> {
         ),
       );
     }
+    final sortedEntries = List<app_transaction.Transaction>.from(entries)..sort((a, b) => b.date.compareTo(a.date));
+
     return ListView.builder(
-      itemCount: _entries.length + 1, // +1 for the total balance footer
+      padding: const EdgeInsets.only(top: 8.0),
+      itemCount: sortedEntries.length + 1,
       itemBuilder: (context, index) {
-        if (index == _entries.length) {
-          return _buildTotalBalanceFooter();
+        if (index == sortedEntries.length) {
+          return _buildTotalBalanceFooter(balance);
         }
-        final entry = _entries[index];
-        final isIncome = entry.type == EntryType.income;
+        final entry = sortedEntries[index];
+        final isIncome = entry.type == app_transaction.TransactionType.credit;
         return ListTile(
           leading: Icon(
             isIncome ? Icons.arrow_circle_up_outlined : Icons.arrow_circle_down_outlined,
             color: isIncome ? Colors.green : Colors.red,
             size: 40,
           ),
-          title: Text(entry.description, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(entry.note ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date)),
           trailing: Text(
             '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
@@ -223,13 +199,13 @@ class _CashbookScreenState extends State<CashbookScreen> {
     );
   }
 
-  Widget _buildTotalBalanceFooter() {
-    final List<Color> gradientColors = _balance >= 0
+  Widget _buildTotalBalanceFooter(double balance) {
+    final List<Color> gradientColors = balance >= 0
         ? [Colors.green.shade700, Colors.green.shade400]
         : [Colors.red.shade700, Colors.red.shade400];
 
     return Container(
-      margin: const EdgeInsets.only(top: 16, bottom: 80), // Adjust bottom margin to avoid FAB overlap
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -253,7 +229,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
             ],
           ),
           Text(
-            '₹${_balance.toStringAsFixed(2)}',
+            '₹${balance.toStringAsFixed(2)}',
             style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
         ],
@@ -261,22 +237,21 @@ class _CashbookScreenState extends State<CashbookScreen> {
     );
   }
 
-
-  Widget _buildFloatingActionButton(List<Color> gradientColors) {
+  Widget _buildFloatingActionButton(BuildContext context, Person cashbookPerson, List<Color> gradientColors) {
     return FloatingActionButton.extended(
-      onPressed: () => _showAddEntryDialog(context),
+      onPressed: () => _showAddEntryDialog(context, cashbookPerson),
       label: const Text('Add Transaction'),
       icon: const Icon(Icons.add),
       backgroundColor: Colors.white,
-      foregroundColor: gradientColors[0],
+      foregroundColor: gradientColors.isNotEmpty ? gradientColors[0] : Colors.blue,
     );
   }
 
-  void _showAddEntryDialog(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
+  void _showAddEntryDialog(BuildContext context, Person cashbookPerson) {
+    final formKey = GlobalKey<FormState>();
     final descriptionController = TextEditingController();
     final amountController = TextEditingController();
-    EntryType selectedType = EntryType.income;
+    app_transaction.TransactionType selectedType = app_transaction.TransactionType.credit;
 
     showDialog(
       context: context,
@@ -284,9 +259,9 @@ class _CashbookScreenState extends State<CashbookScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Add Entry'),
+              title: const Text('Add Cashbook Entry'),
               content: Form(
-                key: _formKey,
+                key: formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -305,38 +280,24 @@ class _CashbookScreenState extends State<CashbookScreen> {
                       decoration: const InputDecoration(labelText: 'Amount'),
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an amount.';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number.';
-                        }
-                        if (double.parse(value) <= 0) {
-                          return 'Please enter an amount greater than zero.';
-                        }
+                        if (value == null || value.isEmpty) return 'Please enter an amount.';
+                        if (double.tryParse(value) == null) return 'Please enter a valid number.';
+                        if (double.parse(value) <= 0) return 'Please enter an amount greater than zero.';
                         return null;
                       },
                     ),
                     Row(
                       children: [
-                        Radio<EntryType>(
-                          value: EntryType.income,
+                        Radio<app_transaction.TransactionType>(
+                          value: app_transaction.TransactionType.credit,
                           groupValue: selectedType,
-                          onChanged: (type) {
-                            setState(() {
-                              selectedType = type!;
-                            });
-                          },
+                          onChanged: (type) => setState(() => selectedType = type!),
                         ),
                         const Text('Income'),
-                        Radio<EntryType>(
-                          value: EntryType.expense,
+                        Radio<app_transaction.TransactionType>(
+                          value: app_transaction.TransactionType.debit,
                           groupValue: selectedType,
-                          onChanged: (type) {
-                            setState(() {
-                              selectedType = type!;
-                            });
-                          },
+                          onChanged: (type) => setState(() => selectedType = type!),
                         ),
                         const Text('Expense'),
                       ],
@@ -351,10 +312,16 @@ class _CashbookScreenState extends State<CashbookScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      final description = descriptionController.text;
-                      final amount = double.parse(amountController.text);
-                      _addEntry(description, amount, selectedType);
+                    if (formKey.currentState!.validate()) {
+                      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+                      final newTransaction = app_transaction.Transaction(
+                        personId: cashbookPerson.id!,
+                        amount: double.parse(amountController.text),
+                        note: descriptionController.text,
+                        date: DateTime.now(),
+                        type: selectedType,
+                      );
+                      transactionProvider.addTransaction(newTransaction);
                       Navigator.pop(context);
                     }
                   },
