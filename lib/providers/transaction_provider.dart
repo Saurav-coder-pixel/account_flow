@@ -33,9 +33,14 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteTransaction(int transactionId) async {
-    await _dbHelper.deleteTransaction(transactionId);
-    _transactions.removeWhere((transaction) => transaction.id == transactionId);
+  Future<void> deleteTransaction(int transactionId, {String? splitId}) async {
+    if (splitId != null && splitId.isNotEmpty) {
+      await _dbHelper.deleteTransactionsBySplitId(splitId);
+      _transactions.removeWhere((transaction) => transaction.splitId == splitId);
+    } else {
+      await _dbHelper.deleteTransaction(transactionId);
+      _transactions.removeWhere((transaction) => transaction.id == transactionId);
+    }
     notifyListeners();
   }
 
