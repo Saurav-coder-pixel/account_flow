@@ -53,39 +53,16 @@ class CashbookScreen extends StatelessWidget {
                 : [Colors.red.shade700, Colors.red.shade400];
 
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Personal Cashbook', style: TextStyle(color: Colors.white)),
-                flexibleSpace: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-              ),
               drawer: AppDrawer(gradientColors: gradientColors),
-              body: Column(
-                children: [
-                  _buildSummary(context, totalIncome, totalExpense, balance),
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(30),
-                          topRight: Radius.circular(30),
-                        ),
-                      ),
-                      child: _buildEntryList(context, entries, balance, transactionProvider),
-                    ),
-                  ),
+              body: CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(balance, gradientColors, context),
+                  _buildSummaryCards(totalIncome, totalExpense, balance),
+                  _buildSectionHeader(context, 'Recent Transactions'),
+                  _buildEntryList(context, entries, transactionProvider),
                 ],
               ),
               floatingActionButton: _buildFloatingActionButton(context, cashbookPerson, gradientColors),
-              floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
             );
           },
         );
@@ -93,181 +70,253 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary(BuildContext context, double totalIncome, double totalExpense, double balance) {
+  SliverAppBar _buildSliverAppBar(
+      double totalBalance, List<Color> gradientColors, BuildContext context) {
+    return SliverAppBar(
+      expandedHeight: 150.0,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          '₹${totalBalance.toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.only(top: 50.0),
+            child: Column(
+              children: [
+                Text(
+                  'Personal Cashbook',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Current Balance',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _buildSummaryCards(double totalIncome, double totalExpense, double balance) {
     final List<Color> gradientColors = balance >= 0
         ? [Colors.green.shade700, Colors.green.shade400]
         : [Colors.red.shade700, Colors.red.shade400];
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+    return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Expanded(child: _buildSummaryCard('Income', totalIncome, Icons.arrow_upward)),
+            _buildSummaryCard(
+              'Total Income',
+              '₹${totalIncome.toStringAsFixed(2)}',
+              [Colors.green.shade700, Colors.green.shade400],
+              Icons.arrow_upward,
+            ),
             const SizedBox(width: 16),
-            Expanded(child: _buildSummaryCard('Expense', totalExpense, Icons.arrow_downward)),
+            _buildSummaryCard(
+              'Total Expense',
+              '₹${totalExpense.toStringAsFixed(2)}',
+              [Colors.red.shade700, Colors.red.shade400],
+              Icons.arrow_downward,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '₹${amount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+  Expanded _buildSummaryCard(
+      String title, String amount, List<Color> colors, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: colors[0].withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Icon(icon, color: Colors.white70),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEntryList(BuildContext context, List<app_transaction.Transaction> entries, double balance, TransactionProvider transactionProvider) {
+
+  SliverToBoxAdapter _buildSectionHeader(BuildContext context, String title) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEntryList(BuildContext context, List<app_transaction.Transaction> entries, TransactionProvider transactionProvider) {
     if (entries.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('No entries yet.', style: TextStyle(fontSize: 18, color: Colors.grey)),
-            SizedBox(height: 8),
-            Text(
-              'Tap the + button to add your first transaction',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.receipt_long, size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              const Text('No transactions yet.', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Text(
+                'Tap the "Add Transaction" button to get started.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
         ),
       );
     }
     final sortedEntries = List<app_transaction.Transaction>.from(entries)..sort((a, b) => b.date.compareTo(a.date));
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 8.0),
-      itemCount: sortedEntries.length + 1,
-      itemBuilder: (context, index) {
-        if (index == sortedEntries.length) {
-          return _buildTotalBalanceFooter(balance);
-        }
-        final entry = sortedEntries[index];
-        final isIncome = entry.type == app_transaction.TransactionType.credit;
-        return Dismissible(
-          key: Key(entry.id.toString()),
-          direction: DismissDirection.endToStart,
-          confirmDismiss: (direction) async {
-            return await showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Delete Entry'),
-                  content: const Text('Are you sure you want to delete this entry?'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-          onDismissed: (direction) {
-            transactionProvider.deleteTransaction(entry.id!, splitId: entry.splitId);
-          },
-          background: Container(
-            color: Colors.red,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            child: const Icon(Icons.delete, color: Colors.white),
-          ),
-          child: ListTile(
-            leading: Icon(
-              isIncome ? Icons.arrow_circle_up_outlined : Icons.arrow_circle_down_outlined,
-              color: isIncome ? Colors.green : Colors.red,
-              size: 40,
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          final entry = sortedEntries[index];
+          final isIncome = entry.type == app_transaction.TransactionType.credit;
+          return Dismissible(
+            key: Key(entry.id.toString()),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (direction) async {
+              return await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Delete Transaction'),
+                    content: const Text('Are you sure you want to delete this transaction?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            onDismissed: (direction) {
+              transactionProvider.deleteTransaction(entry.id!, splitId: entry.splitId);
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Transaction deleted"), backgroundColor: Colors.red)
+              );
+            },
+            background: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(15)
+              ),
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(Icons.delete_sweep_outlined, color: Colors.white, size: 30),
             ),
-            title: Text(entry.note ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date)),
-            trailing: Text(
-              '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: isIncome ? Colors.green : Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+            child: Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                leading: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: isIncome ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  child: Icon(
+                    isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                    color: isIncome ? Colors.green : Colors.red,
+                    size: 28,
+                  ),
+                ),
+                title: Text(entry.note ?? 'No description', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date), style: TextStyle(color: Colors.grey.shade600)),
+                trailing: Text(
+                  '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: isIncome ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTotalBalanceFooter(double balance) {
-    final List<Color> gradientColors = balance >= 0
-        ? [Colors.green.shade700, Colors.green.shade400]
-        : [Colors.red.shade700, Colors.red.shade400];
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'Total Balance',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          Text(
-            '₹${balance.toStringAsFixed(2)}',
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-        ],
+          );
+        },
+        childCount: sortedEntries.length,
       ),
     );
   }
@@ -277,8 +326,8 @@ class CashbookScreen extends StatelessWidget {
       onPressed: () => _showAddEntryDialog(context, cashbookPerson),
       label: const Text('Add Transaction'),
       icon: const Icon(Icons.add),
-      backgroundColor: Colors.white,
-      foregroundColor: gradientColors.isNotEmpty ? gradientColors[0] : Colors.blue,
+      backgroundColor: gradientColors.first,
+      foregroundColor: Colors.white,
     );
   }
 
@@ -294,7 +343,8 @@ class CashbookScreen extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Add Cashbook Entry'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('New Transaction', textAlign: TextAlign.center),
               content: Form(
                 key: formKey,
                 child: Column(
@@ -302,7 +352,7 @@ class CashbookScreen extends StatelessWidget {
                   children: [
                     TextFormField(
                       controller: descriptionController,
-                      decoration: const InputDecoration(labelText: 'Description'),
+                      decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a description.';
@@ -310,9 +360,10 @@ class CashbookScreen extends StatelessWidget {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: amountController,
-                      decoration: const InputDecoration(labelText: 'Amount'),
+                      decoration: const InputDecoration(labelText: 'Amount', prefixText: '₹', border: OutlineInputBorder()),
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) return 'Please enter an amount.';
@@ -321,31 +372,45 @@ class CashbookScreen extends StatelessWidget {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 16),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Radio<app_transaction.TransactionType>(
-                          value: app_transaction.TransactionType.credit,
-                          groupValue: selectedType,
-                          onChanged: (type) => setState(() => selectedType = type!),
+                        const Text("Type:"),
+                        ChoiceChip(
+                          label: const Text('Income'),
+                          selected: selectedType == app_transaction.TransactionType.credit,
+                          onSelected: (selected) {
+                            if (selected) setState(() => selectedType = app_transaction.TransactionType.credit);
+                          },
+                          selectedColor: Colors.green.shade100,
                         ),
-                        const Text('Income'),
-                        Radio<app_transaction.TransactionType>(
-                          value: app_transaction.TransactionType.debit,
-                          groupValue: selectedType,
-                          onChanged: (type) => setState(() => selectedType = type!),
+                        ChoiceChip(
+                          label: const Text('Expense'),
+                          selected: selectedType == app_transaction.TransactionType.debit,
+                          onSelected: (selected) {
+                            if (selected) setState(() => selectedType = app_transaction.TransactionType.debit);
+                          },
+                          selectedColor: Colors.red.shade100,
                         ),
-                        const Text('Expense'),
                       ],
                     ),
                   ],
                 ),
               ),
+              actionsAlignment: MainAxisAlignment.spaceEvenly,
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
-                ElevatedButton(
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.check_circle_outline),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                  ),
                   onPressed: () {
                     if (formKey.currentState!.validate()) {
                       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
@@ -358,9 +423,12 @@ class CashbookScreen extends StatelessWidget {
                       );
                       transactionProvider.addTransaction(newTransaction);
                       Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Transaction added successfully!"), backgroundColor: Colors.green)
+                      );
                     }
                   },
-                  child: const Text('Add'),
+                  label: const Text('Add'),
                 ),
               ],
             );

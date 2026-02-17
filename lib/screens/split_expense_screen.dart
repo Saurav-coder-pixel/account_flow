@@ -36,9 +36,6 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
       return;
     }
 
-    // Capture the ScaffoldMessengerState before the async operations
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final description = _descriptionController.text;
@@ -157,50 +154,56 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         splitId: splitId,
       );
       await transactionProvider.addTransaction(otherPersonTransaction);
-      await personProvider.refreshPersonBalance(person.id!); 
+      await personProvider.refreshPersonBalance(person.id!);
     }
 
-    await personProvider.refreshPersonBalance(cashbookPerson.id!); 
+    await personProvider.refreshPersonBalance(cashbookPerson.id!);
 
     if (!mounted) return;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(
-    content: Text('Expense split successfully! View details in your Cashbook.'),
-    backgroundColor: Colors.green,
-  ),
-);
-
-Navigator.of(context).maybePop();
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Expense split successfully! View details in your Cashbook.'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     const List<Color> gradientColors = [Color(0xFF6A1B9A), Color(0xFF8E24AA)];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
-        backgroundColor: const Color(0xFF7B1FA2),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SplitHistoryScreen(),
-                ),
-              );
-            },
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      drawer: const AppDrawer(gradientColors: gradientColors),
-      body: Container(
-        color: const Color(0xFFF3E5F5),
-        child: _buildSplitForm(),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SplitHistoryScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        drawer: const AppDrawer(gradientColors: gradientColors),
+        body: _buildSplitForm(),
       ),
     );
   }
@@ -222,13 +225,13 @@ Navigator.of(context).maybePop();
                 onPressed: _splitExpense,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF7B1FA2),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF6A1B9A),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Split Expense', style: TextStyle(fontSize: 18)),
+                child: const Text('Split Expense', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -239,7 +242,7 @@ Navigator.of(context).maybePop();
 
   Widget _buildExpenseDetailsCard() {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -255,8 +258,8 @@ Navigator.of(context).maybePop();
               controller: _amountController,
               decoration: const InputDecoration(
                 labelText: 'Amount',
+                prefixIcon: Icon(Icons.currency_rupee),
                 border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.mic_none),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
@@ -272,26 +275,10 @@ Navigator.of(context).maybePop();
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Description',
-                border: const OutlineInputBorder(),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.check_circle_outline),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.emoji_emotions_outlined),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
+                prefixIcon: Icon(Icons.description),
+                border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -308,45 +295,30 @@ Navigator.of(context).maybePop();
 
   Widget _buildSplitBetweenCard() {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Split with (optional)',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.more_horiz),
-                  onPressed: () {},
-                )
-              ],
+            Text(
+              'Split with (optional)',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ..._buildNameFields(),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.center,
-              child: OutlinedButton.icon(
+              child: TextButton.icon(
                 onPressed: () {
                   setState(() {
                     _nameControllers.add(TextEditingController());
                   });
                 },
-                icon: const Icon(Icons.person_add_alt_1_outlined, color: Color(0xFF7B1FA2)),
-                label: const Text('Add Person', style: TextStyle(color: Color(0xFF7B1FA2))),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF7B1FA2), width: 1, style: BorderStyle.solid),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                icon: const Icon(Icons.add_circle_outline, color: Color(0xFF6A1B9A)),
+                label: const Text('Add Person', style: TextStyle(color: Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -366,6 +338,7 @@ Navigator.of(context).maybePop();
                 controller: _nameControllers[index],
                 decoration: InputDecoration(
                   labelText: 'Person ${index + 1}',
+                  prefixIcon: const Icon(Icons.person_outline),
                   border: const OutlineInputBorder(),
                 ),
                 validator: null,
