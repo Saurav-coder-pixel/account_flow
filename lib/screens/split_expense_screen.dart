@@ -20,7 +20,6 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final List<TextEditingController> _nameControllers = [TextEditingController()];
-  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -33,15 +32,9 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   }
 
   void _splitExpense() async {
-    if (!_formKey.currentState!.validate() || _isProcessing) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
-
-    setState(() {
-      _isProcessing = true;
-    });
-
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
     final amount = double.tryParse(_amountController.text) ?? 0.0;
@@ -57,13 +50,15 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
       }
     }
 
-    if (mounted && newPersonNames.isNotEmpty) {
+    if (!mounted) return;
+
+    if (newPersonNames.isNotEmpty) {
       final confirmedNewPeople = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Add New Contacts?'),
+          title: const Text('New People Found'),
           content: Text(
-              'These people are not in your contacts: ${newPersonNames.join(', ')}.\n\nWould you like to add them?'),
+              'The following people are not in your contacts: ${newPersonNames.join(', ')}. Do you want to add them?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
@@ -71,13 +66,12 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Add & Continue'),
+              child: const Text('Add and Continue'),
             ),
           ],
         ),
       );
       if (confirmedNewPeople != true) {
-        setState(() => _isProcessing = false);
         return;
       }
     }
@@ -91,18 +85,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     final confirmedSplit = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirm Expense Split'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Expense: ₹${amount.toStringAsFixed(2)}'),
-            Text('Split among: $totalParticipants people'),
-            Text('Each share: ₹${splitAmount.toStringAsFixed(2)}'),
-            const Divider(height: 20),
-            Text('Your cashbook will show a debit of ₹${amount.toStringAsFixed(2)} and a credit of ₹${amountOwedByOthers.toStringAsFixed(2)} for reimbursement.'),
-          ],
-        ),
+        title: const Text('Confirm Split'),
+        content: Text('Total Expense: ₹${amount.toStringAsFixed(2)}\n'
+            'Split among: $totalParticipants people (including you)\n'
+            'Each person\'s share: ₹${splitAmount.toStringAsFixed(2)}\n\n'
+            'Your personal cashbook will show a debit of ₹${amount.toStringAsFixed(2)} for the full expense, and a credit of ₹${amountOwedByOthers.toStringAsFixed(2)} for the amount owed to you.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -117,7 +104,6 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     );
 
     if (confirmedSplit != true) {
-      setState(() => _isProcessing = false);
       return;
     }
 
@@ -164,7 +150,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         amount: splitAmount,
         note: 'Owed to you for: $description',
         date: DateTime.now(),
-        type: app_transaction.TransactionType.debit, //This is a debit for them, as they owe you
+        type: app_transaction.TransactionType.debit,
         splitId: splitId,
       );
       await transactionProvider.addTransaction(otherPersonTransaction);
@@ -173,18 +159,15 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
     await personProvider.refreshPersonBalance(cashbookPerson.id!);
 
-    if (mounted) {
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Expense split successfully! View details in your Cashbook.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.of(context).maybePop();
-    }
-    setState(() {
-      _isProcessing = false;
-    });
+    if (!mounted) return;
+
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Expense split successfully! View details in your Cashbook.'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -193,9 +176,16 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Split Expense', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-        backgroundColor: gradientColors.first,
-        elevation: 0,
+        title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.history, color: Colors.white),
@@ -211,45 +201,37 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         ],
       ),
       drawer: const AppDrawer(gradientColors: gradientColors),
-      body: Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                colors: [gradientColors.first, gradientColors.last],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter
-            )
-        ),
-        child: _buildSplitForm(),
-      ),
+      body: _buildSplitForm(),
     );
   }
 
   Widget _buildSplitForm() {
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildExpenseDetailsCard(),
-            const SizedBox(height: 16),
-            _buildSplitBetweenCard(),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: _isProcessing ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3,)) : const Icon(Icons.call_split),
-              onPressed: _isProcessing ? null : _splitExpense,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF7B1FA2),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildExpenseDetailsCard(),
+              const SizedBox(height: 16),
+              _buildSplitBetweenCard(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _splitExpense,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF6A1B9A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
+                child: const Text('Split Expense', style: TextStyle(fontSize: 18)),
               ),
-              label: Text(_isProcessing ? 'Processing...' : 'Split Expense', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -257,10 +239,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
   Widget _buildExpenseDetailsCard() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -268,22 +250,17 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
               'Expense Details',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _amountController,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                prefixText: '₹ ',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.money),
-              ),
+              decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder()),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null ||
                     value.isEmpty ||
                     double.tryParse(value) == null ||
                     double.parse(value) <= 0) {
-                  return 'Please enter a valid positive amount';
+                  return 'Please enter a valid amount';
                 }
                 return null;
               },
@@ -291,14 +268,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
-              ),
+              decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a description for the expense';
+                  return 'Please enter a description';
                 }
                 return null;
               },
@@ -311,35 +284,30 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
   Widget _buildSplitBetweenCard() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Split With',
+              'Split with (optional)',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ..._buildNameFields(),
             const SizedBox(height: 16),
-            Center(
-              child: OutlinedButton.icon(
+            Align(
+              alignment: Alignment.center,
+              child: TextButton.icon(
                 onPressed: () {
                   setState(() {
                     _nameControllers.add(TextEditingController());
                   });
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Person'),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF7B1FA2)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
+                icon: const Icon(Icons.add, color: Color(0xFF6A1B9A)),
+                label: const Text('Add Person', style: TextStyle(color: Color(0xFF6A1B9A))),
               ),
             ),
           ],
@@ -351,23 +319,22 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   List<Widget> _buildNameFields() {
     return List.generate(_nameControllers.length, (index) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
+        padding: const EdgeInsets.only(bottom: 8.0),
         child: Row(
           children: [
             Expanded(
               child: TextFormField(
                 controller: _nameControllers[index],
                 decoration: InputDecoration(
-                    labelText: 'Person ${index + 1}',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.person_outline)
+                  labelText: 'Person ${index + 1}',
+                  border: const OutlineInputBorder(),
                 ),
                 validator: null,
               ),
             ),
             if (_nameControllers.length > 1)
               IconButton(
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                 onPressed: () {
                   setState(() {
                     _nameControllers[index].dispose();

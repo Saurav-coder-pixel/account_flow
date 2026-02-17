@@ -21,7 +21,7 @@ class TransactionHistoryCard extends StatelessWidget {
     final color = isCredit ? Colors.green : Colors.red;
 
     return Card(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color.withOpacity(0.1),
@@ -39,7 +39,7 @@ class TransactionHistoryCard extends StatelessWidget {
               children: [
                 Text(
                   personName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -54,9 +54,9 @@ class TransactionHistoryCard extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -81,17 +81,17 @@ class TransactionHistoryCard extends StatelessWidget {
           children: [
             if (transaction.note != null && transaction.note!.isNotEmpty)
               Padding(
-                padding: EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   transaction.note!,
-                  style: TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 13),
                 ),
               ),
             Padding(
-              padding: EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 4),
               child: Text(
                 DateFormat('hh:mm a').format(transaction.date),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
                 ),
@@ -100,7 +100,7 @@ class TransactionHistoryCard extends StatelessWidget {
           ],
         ),
         trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: Colors.grey),
+          icon: const Icon(Icons.delete_outline, color: Colors.grey),
           onPressed: onDelete,
         ),
       ),

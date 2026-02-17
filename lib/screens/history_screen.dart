@@ -112,26 +112,36 @@ class HistoryScreen extends StatelessWidget {
               return Dismissible(
                 key: Key('history_${transaction.id}'),
                 direction: DismissDirection.endToStart,
+                confirmDismiss: (direction) async {
+                  return await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Delete Entry'),
+                        content: const Text('Are you sure you want to delete this entry?'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                onDismissed: (direction) {
+                  transactionProvider.deleteTransaction(transaction.id!, splitId: transaction.splitId);
+                },
                 background: Container(
                   color: Colors.red,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                onDismissed: (direction) {
-                  transactionProvider.deleteTransaction(transaction.id!);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text("Transaction deleted"),
-                      action: SnackBarAction(
-                        label: "Undo",
-                        onPressed: () {
-                          transactionProvider.addTransaction(transaction);
-                        },
-                      ),
-                    ),
-                  );
-                },
                 child: ListTile(
                   leading: Icon(
                     isCredit ? Icons.arrow_circle_down_outlined : Icons.arrow_circle_up_outlined,

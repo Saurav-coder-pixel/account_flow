@@ -44,62 +44,96 @@ class SplitHistoryScreen extends StatelessWidget {
               final transactions = groupedSplits[splitId]!;
               final firstTransaction = transactions.first;
               final totalAmount = transactions.fold<double>(
-                  0, (sum, item) => sum + item.amount * transactions.length);
+                  0, (sum, item) => sum + item.amount);
               final description = firstTransaction.note;
               final date = firstTransaction.date;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        description ?? 'No description',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+              return Dismissible(
+                key: Key(splitId),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (direction) async {
+                  return await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Delete Entry'),
+                        content: const Text('Are you sure you want to delete this entry?'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                onDismissed: (direction) {
+                  transactionProvider.deleteTransaction(firstTransaction.id!, splitId: splitId);
+                },
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                child: Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          description ?? 'No description',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Total: ₹${totalAmount.toStringAsFixed(2)} (Split between ${transactions.length} people)',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Total: ₹${totalAmount.toStringAsFixed(2)} (Split between ${transactions.length} people)',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('MMM dd, yyyy • hh:mm a').format(date),
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Participants:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('MMM dd, yyyy • hh:mm a').format(date),
+                          style: TextStyle(color: Colors.grey.shade600),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      FutureBuilder<List<Widget>>(
-                        future: _buildParticipantList(context, transactions),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          }
-                          if (snapshot.hasError) {
-                            return const Text('Error loading participants');
-                          }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: snapshot.data ?? [],
-                          );
-                        },
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Participants:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FutureBuilder<List<Widget>>(
+                          future: _buildParticipantList(context, transactions),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return const Text('Error loading participants');
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: snapshot.data ?? [],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
