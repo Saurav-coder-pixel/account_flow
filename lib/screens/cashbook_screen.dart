@@ -12,8 +12,9 @@ class CashbookScreen extends StatelessWidget {
 
   Future<Person> _findOrCreateCashbookPerson(PersonProvider personProvider) async {
     const cashbookPersonName = 'Personal Cashbook';
-    Person? person = await personProvider.findPersonByName(cashbookPersonName);
-    person ??= await personProvider.addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now()));
+    final cashbookPersons = await personProvider.getCashbookPersons();
+    Person? person = cashbookPersons.isNotEmpty ? cashbookPersons.first : null;
+    person ??= await personProvider.addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now(), isCashbook: true));
     return person;
   }
 

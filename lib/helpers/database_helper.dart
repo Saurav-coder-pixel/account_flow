@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDb,
       onUpgrade: _onUpgrade,
     );
@@ -33,6 +33,9 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE transactions ADD COLUMN split_id TEXT');
     }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE persons ADD COLUMN is_cashbook INTEGER NOT NULL DEFAULT 0');
+    }
   }
 
   Future<void> _createDb(Database db, int version) async {
@@ -40,7 +43,8 @@ class DatabaseHelper {
       CREATE TABLE persons (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        is_cashbook INTEGER NOT NULL DEFAULT 0
       )
     ''');
 

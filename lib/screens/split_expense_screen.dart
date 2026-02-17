@@ -116,7 +116,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     Person? cashbookPerson =
     await personProvider.findPersonByName(cashbookPersonName);
     cashbookPerson ??= await personProvider
-        .addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now()));
+        .addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now(), isCashbook: true,));
 
     final totalExpenseTransaction = app_transaction.Transaction(
       personId: cashbookPerson.id!,
@@ -143,7 +143,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     for (final name in otherPersonNames) {
       Person? person = await personProvider.findPersonByName(name);
       person ??= await personProvider
-          .addPerson(Person(name: name, createdAt: DateTime.now()));
+          .addPerson(Person(name: name, createdAt: DateTime.now(), isCashbook: false,));
 
       final otherPersonTransaction = app_transaction.Transaction(
         personId: person.id!,

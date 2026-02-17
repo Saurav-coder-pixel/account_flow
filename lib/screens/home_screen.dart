@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
-import '../providers/theme_provider.dart';
 import '../models/transaction.dart';
 import '../models/person.dart';
 import '../widgets/person_card.dart';
@@ -18,228 +17,256 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _searchText = '';
+  late Future<List<Person>> _personsFuture;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TransactionProvider>(context, listen: false)
-          .loadAllTransactions();
-      Provider.of<PersonProvider>(context, listen: false).loadPersons();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final personProvider = Provider.of<PersonProvider>(context, listen: false);
+    setState(() {
+      _personsFuture = personProvider.getHomePersons();
     });
+    await Provider.of<TransactionProvider>(context, listen: false)
+        .loadAllTransactions();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<TransactionProvider, PersonProvider>(
-      builder: (context, transactionProvider, personProvider, child) {
-        final allTransactions = transactionProvider.transactions;
-        double totalCredit = 0;
-        double totalDebit = 0;
-
-        for (var transaction in allTransactions) {
-          if (transaction.type == TransactionType.credit) {
-            totalCredit += transaction.amount;
-          } else {
-            totalDebit += transaction.amount;
-          }
+    return FutureBuilder<List<Person>>(
+      future: _personsFuture,
+      builder: (context, personSnapshot) {
+        if (personSnapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Account Flow')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
         }
 
-        final totalBalance = totalCredit - totalDebit;
-        final bool isCredit = totalBalance >= 0;
-        final List<Color> gradientColors = isCredit
-            ? [Colors.green.shade700, Colors.green.shade400]
-            : [Colors.red.shade700, Colors.red.shade400];
+        if (personSnapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Account Flow')),
+            body: Center(child: Text('Error: ${personSnapshot.error}')),
+          );
+        }
 
-        final filteredPersons = personProvider.persons.where((person) {
-          return person.name.toLowerCase().contains(_searchText.toLowerCase());
-        }).toList();
+        final homePersons = personSnapshot.data ?? [];
+        final homePersonIds = homePersons.map((p) => p.id).toSet();
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Account Flow', style: TextStyle(color: Colors.white),),
-            elevation: 0,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Total Balance',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        '₹${totalBalance.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+        return Consumer<TransactionProvider>(
+          builder: (context, transactionProvider, child) {
+            final allTransactions = transactionProvider.transactions;
+            final homeTransactions = allTransactions
+                .where((tx) => homePersonIds.contains(tx.personId))
+                .toList();
+
+            double totalCredit = 0;
+            double totalDebit = 0;
+
+            for (var transaction in homeTransactions) {
+              if (transaction.type == TransactionType.credit) {
+                totalCredit += transaction.amount;
+              } else {
+                totalDebit += transaction.amount;
+              }
+            }
+
+            final totalBalance = totalCredit - totalDebit;
+            final bool isCredit = totalBalance >= 0;
+            final List<Color> gradientColors = isCredit
+                ? [Colors.green.shade700, Colors.green.shade400]
+                : [Colors.red.shade700, Colors.red.shade400];
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Account Flow', style: TextStyle(color: Colors.white),),
+                elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          drawer: AppDrawer(gradientColors: gradientColors),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              Colors.green.shade700,
-                              Colors.green.shade400
-                            ]),
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'Total Credit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '₹${totalCredit.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Total Balance',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
+                          Text(
+                            '₹${totalBalance.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              Colors.red.shade700,
-                              Colors.red.shade400
-                            ]),
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'Total Debit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '₹${totalDebit.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search People...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).cardColor,
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchText = value;
-                    });
-                  },
-                ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Recent People',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
-              Expanded(
-                child: filteredPersons.isEmpty
-                    ? const Center(
-                  child: Text('No people added yet.'),
-                )
-                    : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filteredPersons.length,
-                  itemBuilder: (context, index) {
-                    final person = filteredPersons[index];
-                    return PersonCard(
-                      person: person,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PersonDetailScreen(person: person),
+              drawer: AppDrawer(gradientColors: gradientColors),
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: [
+                                  Colors.green.shade700,
+                                  Colors.green.shade400
+                                ]),
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'Total Credit',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '₹${totalCredit.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: [
+                                  Colors.red.shade700,
+                                  Colors.red.shade400
+                                ]),
+                                borderRadius: BorderRadius.circular(12)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'Total Debit',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '₹${totalDebit.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search People...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchText = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Recent People',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  Expanded(
+                    child: homePersons.isEmpty
+                        ? const Center(
+                      child: Text('No people added yet.'),
+                    )
+                        : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).length,
+                      itemBuilder: (context, index) {
+                        final filteredPersons = homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).toList();
+                        final person = filteredPersons[index];
+                        return PersonCard(
+                          person: person,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    PersonDetailScreen(person: person),
+                              ),
+                            ).then((_) => _loadData());
+                          },
+                          onEdit: () => _showEditPersonDialog(context, person),
+                          onDelete: () => _showDeleteConfirmationDialog(context, person),
                         );
                       },
-                      onEdit: () => _showEditPersonDialog(context, person),
-                      onDelete: () => _showDeleteConfirmationDialog(
-                          context, person),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddPersonDialog(context),
-            backgroundColor: gradientColors[0],
-            child: const Icon(Icons.add, color: Colors.white,),
-          ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () => _showAddPersonDialog(context),
+                backgroundColor: gradientColors[0],
+                child: const Icon(Icons.add, color: Colors.white,),
+              ),
+            );
+          },
         );
       },
     );
@@ -278,8 +305,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   final name = nameController.text;
                   final personProvider =
                   Provider.of<PersonProvider>(context, listen: false);
-                  final newPerson = Person(name: name, createdAt: DateTime.now());
+                  final newPerson = Person(name: name, createdAt: DateTime.now(), isCashbook: false);
                   await personProvider.addPerson(newPerson);
+                  _loadData();
                   Navigator.pop(context);
                 }
               },
@@ -326,6 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Provider.of<PersonProvider>(context, listen: false);
                   await personProvider
                       .updatePerson(person.copyWith(name: newName));
+                  _loadData();
                   Navigator.pop(context);
                 }
               },
@@ -355,11 +384,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Provider.of<PersonProvider>(context, listen: false);
                 final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
 
-                // 1. Delete person from DB and PersonProvider
                 await personProvider.deletePerson(person.id!);
-
-                // 2. Sync TransactionProvider to remove transactions and update global totals
                 transactionProvider.removeTransactionsByPersonId(person.id!);
+
+                _loadData();
 
                 Navigator.pop(context);
               },

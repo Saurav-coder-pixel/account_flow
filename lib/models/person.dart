@@ -2,11 +2,13 @@ class Person {
   final int? id;
   final String name;
   final DateTime createdAt;
+  final bool isCashbook;
 
   Person({
     this.id,
     required this.name,
     required this.createdAt,
+    this.isCashbook = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -14,6 +16,7 @@ class Person {
       'id': id,
       'name': name,
       'created_at': createdAt.toIso8601String(),
+      'is_cashbook': isCashbook ? 1 : 0,
     };
   }
 
@@ -22,6 +25,7 @@ class Person {
       id: map['id'],
       name: map['name'],
       createdAt: DateTime.parse(map['created_at']),
+      isCashbook: map['is_cashbook'] == 1,
     );
   }
 
@@ -29,11 +33,13 @@ class Person {
     int? id,
     String? name,
     DateTime? createdAt,
+    bool? isCashbook,
   }) {
     return Person(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
+      isCashbook: isCashbook ?? this.isCashbook,
     );
   }
 }

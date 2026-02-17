@@ -103,8 +103,13 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
   void _savePerson() async {
     if (_formKey.currentState!.validate()) {
       try {
+        final newPerson = Person(
+          name: _nameController.text.trim(),
+          createdAt: DateTime.now(),
+          isCashbook: false,
+        );
         await Provider.of<PersonProvider>(context, listen: false)
-            .addPerson(_nameController.text.trim() as Person);
+            .addPerson(newPerson);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

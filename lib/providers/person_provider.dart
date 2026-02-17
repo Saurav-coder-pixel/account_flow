@@ -18,6 +18,16 @@ class PersonProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Person>> getHomePersons() async {
+    await loadPersons();
+    return _persons.where((p) => p.isCashbook == false).toList();
+  }
+
+  Future<List<Person>> getCashbookPersons() async {
+    await loadPersons();
+    return _persons.where((p) => p.isCashbook == true).toList();
+  }
+
   Future<Person> addPerson(Person person) async {
     final id = await _dbHelper.insertPerson(person);
     final newPerson = person.copyWith(id: id);
@@ -50,6 +60,7 @@ class PersonProvider with ChangeNotifier {
   }
 
   Future<Person?> findPersonByName(String name) async {
+    await loadPersons();
     try {
       return _persons.firstWhere((person) => person.name == name);
     } catch (e) {
