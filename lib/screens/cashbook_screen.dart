@@ -79,7 +79,7 @@ class CashbookScreen extends StatelessWidget {
                           topRight: Radius.circular(30),
                         ),
                       ),
-                      child: _buildEntryList(entries, balance),
+                      child: _buildEntryList(context, entries, balance, transactionProvider),
                     ),
                   ),
                 ],
@@ -152,7 +152,7 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEntryList(List<app_transaction.Transaction> entries, double balance) {
+  Widget _buildEntryList(BuildContext context, List<app_transaction.Transaction> entries, double balance, TransactionProvider transactionProvider) {
     if (entries.isEmpty) {
       return const Center(
         child: Column(
@@ -179,20 +179,54 @@ class CashbookScreen extends StatelessWidget {
         }
         final entry = sortedEntries[index];
         final isIncome = entry.type == app_transaction.TransactionType.credit;
-        return ListTile(
-          leading: Icon(
-            isIncome ? Icons.arrow_circle_up_outlined : Icons.arrow_circle_down_outlined,
-            color: isIncome ? Colors.green : Colors.red,
-            size: 40,
+        return Dismissible(
+          key: Key(entry.id.toString()),
+          direction: DismissDirection.endToStart,
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Delete Entry'),
+                  content: const Text('Are you sure you want to delete this entry?'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          onDismissed: (direction) {
+            transactionProvider.deleteTransaction(entry.id!, splitId: entry.splitId);
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
           ),
-          title: Text(entry.note ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date)),
-          trailing: Text(
-            '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
-            style: TextStyle(
+          child: ListTile(
+            leading: Icon(
+              isIncome ? Icons.arrow_circle_up_outlined : Icons.arrow_circle_down_outlined,
               color: isIncome ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+              size: 40,
+            ),
+            title: Text(entry.note ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date)),
+            trailing: Text(
+              '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: isIncome ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
         );

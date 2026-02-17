@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/person_provider.dart';
@@ -7,7 +6,7 @@ import 'providers/theme_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
               primaryColor: Colors.blue,
             ),
             themeMode: themeProvider.themeMode,
-            home: SplashScreen(),
+            home: const SplashScreen(),
             debugShowCheckedModeBanner: false,
           );
         },

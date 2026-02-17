@@ -50,15 +50,17 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate to home screen
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const List<Color> gradientColors = [Color(0xFF6A1B9A), Color(0xFF8E24AA)];
+
     return Scaffold(
-      backgroundColor: Colors.blue.shade50,
+      backgroundColor: Colors.purple.shade50,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -69,11 +71,15 @@ class _SplashScreenState extends State<SplashScreen>
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  gradient: const LinearGradient(
+                    colors: gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.purple.withOpacity(0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -91,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade800,
+                  color: Colors.purple.shade800,
                 ),
               ),
               const SizedBox(height: 10),
@@ -104,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 50),
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
               ),
             ],
           ),

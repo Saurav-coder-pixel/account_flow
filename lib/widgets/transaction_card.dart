@@ -18,7 +18,7 @@ class TransactionCard extends StatelessWidget {
     final color = isCredit ? Colors.green : Colors.red;
 
     return Card(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color.withOpacity(0.1),
@@ -36,9 +36,9 @@ class TransactionCard extends StatelessWidget {
                 color: color,
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -60,12 +60,12 @@ class TransactionCard extends StatelessWidget {
             if (transaction.note != null && transaction.note!.isNotEmpty)
               Text(
                 transaction.note!,
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               DateFormat('MMM dd, yyyy • hh:mm a').format(transaction.date),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
               ),
@@ -73,7 +73,7 @@ class TransactionCard extends StatelessWidget {
           ],
         ),
         trailing: IconButton(
-          icon: Icon(Icons.delete_outline, color: Colors.grey),
+          icon: const Icon(Icons.delete_outline, color: Colors.grey),
           onPressed: onDelete,
         ),
       ),

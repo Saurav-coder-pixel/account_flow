@@ -146,6 +146,11 @@ class DatabaseHelper {
     return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> deleteTransactionsBySplitId(String splitId) async {
+    final db = await database;
+    return await db.delete('transactions', where: 'split_id = ?', whereArgs: [splitId]);
+  }
+
   Future<double> getPersonBalance(int personId) async {
     final db = await database;
     final result = await db.rawQuery('''
