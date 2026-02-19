@@ -84,9 +84,9 @@ class PersonDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              _buildSummaryItem("Total Credit", credit, Colors.green),
+              _buildSummaryItem("You will give", credit, Colors.green),
               const SizedBox(width: 16),
-              _buildSummaryItem("Total Debit", debit, Colors.red),
+              _buildSummaryItem("You will get", debit, Colors.red),
             ],
           ),
           const SizedBox(height: 16),
@@ -109,7 +109,7 @@ class PersonDetailScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  "₹${balance.abs().toStringAsFixed(2)} ${balance >= 0 ? '(Credit)' : '(Debit)'}",
+                  "₹${balance.abs().toStringAsFixed(2)} ${balance >= 0 ? '(You will give)' : '(You will get)'}",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

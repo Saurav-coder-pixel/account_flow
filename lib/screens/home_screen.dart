@@ -173,14 +173,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Row(
           children: [
             _buildSummaryCard(
-              'Total Credit',
+              'You will give',
               '₹${totalCredit.toStringAsFixed(2)}',
               [Colors.green.shade700, Colors.green.shade400],
               Icons.arrow_upward,
             ),
             const SizedBox(width: 16),
             _buildSummaryCard(
-              'Total Debit',
+              'You will get',
               '₹${totalDebit.toStringAsFixed(2)}',
               [Colors.red.shade700, Colors.red.shade400],
               Icons.arrow_downward,

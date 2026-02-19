@@ -174,34 +174,37 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   Widget build(BuildContext context) {
     const List<Color> gradientColors = [Color(0xFF6A1B9A), Color(0xFF8E24AA)];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SplitHistoryScreen(),
-                ),
-              );
-            },
-          ),
-        ],
       ),
-      drawer: const AppDrawer(gradientColors: gradientColors),
-      body: _buildSplitForm(),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SplitHistoryScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        drawer: const AppDrawer(gradientColors: gradientColors),
+        body: _buildSplitForm(),
+      ),
     );
   }
 
@@ -222,13 +225,13 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                 onPressed: _splitExpense,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF6A1B9A),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF6A1B9A),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Split Expense', style: TextStyle(fontSize: 18)),
+                child: const Text('Split Expense', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -239,7 +242,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
   Widget _buildExpenseDetailsCard() {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -253,7 +256,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _amountController,
-              decoration: const InputDecoration(labelText: 'Amount', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Amount',
+                prefixIcon: Icon(Icons.currency_rupee),
+                border: OutlineInputBorder(),
+              ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null ||
@@ -268,7 +275,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                prefixIcon: Icon(Icons.description),
+                border: OutlineInputBorder(),
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a description';
@@ -284,7 +295,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
   Widget _buildSplitBetweenCard() {
     return Card(
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -306,8 +317,8 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                     _nameControllers.add(TextEditingController());
                   });
                 },
-                icon: const Icon(Icons.add, color: Color(0xFF6A1B9A)),
-                label: const Text('Add Person', style: TextStyle(color: Color(0xFF6A1B9A))),
+                icon: const Icon(Icons.add_circle_outline, color: Color(0xFF6A1B9A)),
+                label: const Text('Add Person', style: TextStyle(color: Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -327,6 +338,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                 controller: _nameControllers[index],
                 decoration: InputDecoration(
                   labelText: 'Person ${index + 1}',
+                  prefixIcon: const Icon(Icons.person_outline),
                   border: const OutlineInputBorder(),
                 ),
                 validator: null,

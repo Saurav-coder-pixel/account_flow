@@ -125,8 +125,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                         children: [
                                           Expanded(
                                             child: RadioListTile<app_transaction.TransactionType>(
-                                              title: const Text('Credit'),
-                                              subtitle: const Text('Money given'),
+                                              title: const Text('Money you given'),
                                               value: app_transaction.TransactionType.credit,
                                               groupValue: _selectedType,
                                               onChanged: (value) {
@@ -139,8 +138,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                           ),
                                           Expanded(
                                             child: RadioListTile<app_transaction.TransactionType>(
-                                              title: const Text('Debit'),
-                                              subtitle: const Text('Money received'),
+                                              title: const Text('Money you received'),
                                               value: app_transaction.TransactionType.debit,
                                               groupValue: _selectedType,
                                               onChanged: (value) {
