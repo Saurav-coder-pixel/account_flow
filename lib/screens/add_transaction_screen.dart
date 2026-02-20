@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:math_expressions/math_expressions.dart';
 import '../models/person.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/transaction_provider.dart';
@@ -25,6 +26,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   bool get _isEditing => widget.transaction != null;
 
+  String _calculation = '';
+  String _result = '';
+
   @override
   void initState() {
     super.initState();
@@ -35,13 +39,45 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _selectedType = transaction.type;
       _selectedDate = transaction.date;
     }
+    _amountController.addListener(_onAmountChanged);
   }
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _onAmountChanged() {
+    String expression = _amountController.text;
+    if (expression.isEmpty) {
+      setState(() {
+        _calculation = '';
+        _result = '';
+      });
+      return;
+    }
+
+    try {
+      // Replace user-friendly operators with ones the library understands
+      expression = expression.replaceAll('×', '*').replaceAll('÷', '/');
+      Parser p = Parser();
+      Expression exp = p.parse(expression);
+      ContextModel cm = ContextModel();
+      double eval = exp.evaluate(EvaluationType.REAL, cm);
+
+      setState(() {
+        _calculation = expression;
+        _result = '= ${eval.toStringAsFixed(2)}';
+      });
+    } catch (e) {
+      setState(() {
+        _calculation = '';
+        _result = '';
+      });
+    }
   }
 
   @override
@@ -157,7 +193,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         decoration: InputDecoration(
                                           labelText: 'Amount',
-                                          hintText: 'Enter amount',
+                                          hintText: 'Enter amount or calculation (e.g., 50*2)',
                                           prefixIcon: const Icon(Icons.currency_rupee),
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(8),
@@ -167,13 +203,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                           if (value == null || value.trim().isEmpty) {
                                             return 'Please enter an amount';
                                           }
-                                          final amount = double.tryParse(value);
-                                          if (amount == null || amount <= 0) {
-                                            return 'Please enter a valid amount';
-                                          }
+                                          // The rest of the validation is handled by the calculation logic
                                           return null;
                                         },
                                       ),
+                                      if (_calculation.isNotEmpty && _result.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            _result,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.green,
+                                            ),
+                                          ),
+                                        ),
                                       const SizedBox(height: 16),
                                       TextFormField(
                                         controller: _noteController,
@@ -291,7 +336,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       try {
-        final amount = double.parse(_amountController.text);
+        double amount;
+        String expression = _amountController.text.replaceAll('×', '*').replaceAll('÷', '/');
+        try {
+          Parser p = Parser();
+          Expression exp = p.parse(expression);
+          ContextModel cm = ContextModel();
+          amount = exp.evaluate(EvaluationType.REAL, cm);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid calculation.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
         final note = _noteController.text.trim().isEmpty ? null : _noteController.text.trim();
 
         if (_isEditing) {
