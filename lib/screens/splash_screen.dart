@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
@@ -13,104 +14,155 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+  late AnimationController _controller;
+  late Animation<double> _logoFadeAnimation;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<Offset> _titleSlideAnimation;
+  late Animation<Offset> _subtitleSlideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 2000),
     );
 
-    _animationController.forward();
+    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+
+    _logoScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
+      ),
+    );
+
+    _titleSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.8, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _subtitleSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 0.9, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _controller.forward();
     _initializeApp();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   Future<void> _initializeApp() async {
-    // Load initial data
-    await Future.wait([
+    // Ensure the animation runs for a minimum duration while data loads.
+    final dataLoader = Future.wait([
       Provider.of<PersonProvider>(context, listen: false).loadPersons(),
       Provider.of<TransactionProvider>(context, listen: false).loadAllTransactions(),
     ]);
 
-    // Wait for splash animation to complete
-    await Future.delayed(const Duration(seconds: 2));
+    final timer = Future.delayed(const Duration(seconds: 3));
 
-    // Navigate to home screen
+    await Future.wait([dataLoader, timer]);
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 800),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const List<Color> gradientColors = [Color(0xFF6A1B9A), Color(0xFF8E24AA)];
-
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Theme.of(context).primaryColor, Colors.blue.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: gradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+              ScaleTransition(
+                scale: _logoScaleAnimation,
+                child: FadeTransition(
+                  opacity: _logoFadeAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.9),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        )
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet,
-                  size: 60,
-                  color: Colors.white,
+                    child: Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 70,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
-              Text(
-                'Account Flow',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.purple.shade800,
+              SlideTransition(
+                position: _titleSlideAnimation,
+                child: const Text(
+                  'Account Flow',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                'Manage Your Accounts Simply',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
+              SlideTransition(
+                position: _subtitleSlideAnimation,
+                child: Text(
+                  'Your Financial Compass',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 80),
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ],
           ),
