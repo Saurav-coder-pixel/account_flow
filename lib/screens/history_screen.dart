@@ -113,7 +113,7 @@ class HistoryScreen extends StatelessWidget {
               final isCredit = transaction.type == app_transaction.TransactionType.credit;
 
               return Dismissible(
-                key: Key('history_\${transaction.id}'),
+                key: const Key('history_\${transaction.id}'),
                 direction: DismissDirection.endToStart,
                 confirmDismiss: (direction) async {
                   return await showDialog(
