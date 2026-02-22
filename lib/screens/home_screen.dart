@@ -1,3 +1,4 @@
+import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
@@ -9,6 +10,7 @@ import 'person_detail_screen.dart';
 import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
+  static const routeName = '/home';
   const HomeScreen({super.key});
 
   @override
@@ -36,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     return FutureBuilder<List<Person>>(
       future: _personsFuture,
       builder: (context, personSnapshot) {
@@ -110,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Text(
-                            '₹${totalBalance.toStringAsFixed(2)}',
+                            '${currencyProvider.currencySymbol}${totalBalance.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -153,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '₹${totalCredit.toStringAsFixed(2)}',
+                                    '${currencyProvider.currencySymbol}${totalCredit.toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -188,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '₹${totalDebit.toStringAsFixed(2)}',
+                                    '${currencyProvider.currencySymbol}${totalDebit.toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,

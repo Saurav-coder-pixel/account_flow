@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
 import 'home_screen.dart';
+import 'currency_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -73,6 +75,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isCurrencySelected = prefs.getBool('isCurrencySelected') ?? false;
+
     // Ensure the animation runs for a minimum duration while data loads.
     final dataLoader = Future.wait([
       Provider.of<PersonProvider>(context, listen: false).loadPersons(),
@@ -84,15 +89,11 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.wait([dataLoader, timer]);
 
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 800),
-        ),
-      );
+      if (isCurrencySelected) {
+        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      } else {
+        Navigator.of(context).pushReplacementNamed(CurrencySelectionScreen.routeName);
+      }
     }
   }
 

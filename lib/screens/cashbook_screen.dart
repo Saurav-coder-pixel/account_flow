@@ -1,3 +1,4 @@
+import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class CashbookScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
 
     return FutureBuilder<Person>(
       future: _findOrCreateCashbookPerson(personProvider),
@@ -56,13 +58,13 @@ class CashbookScreen extends StatelessWidget {
               drawer: AppDrawer(gradientColors: gradientColors),
               body: CustomScrollView(
                 slivers: [
-                  _buildSliverAppBar(balance, gradientColors, context),
-                  _buildSummaryCards(totalIncome, totalExpense, balance),
+                  _buildSliverAppBar(balance, gradientColors, context, currencyProvider.currencySymbol),
+                  _buildSummaryCards(totalIncome, totalExpense, balance, currencyProvider.currencySymbol),
                   _buildSectionHeader(context, 'Recent Transactions'),
-                  _buildEntryList(context, entries, transactionProvider),
+                  _buildEntryList(context, entries, transactionProvider, currencyProvider.currencySymbol),
                 ],
               ),
-              floatingActionButton: _buildFloatingActionButton(context, cashbookPerson, gradientColors),
+              floatingActionButton: _buildFloatingActionButton(context, cashbookPerson, gradientColors, currencyProvider.currencySymbol),
             );
           },
         );
@@ -71,7 +73,7 @@ class CashbookScreen extends StatelessWidget {
   }
 
   SliverAppBar _buildSliverAppBar(
-      double totalBalance, List<Color> gradientColors, BuildContext context) {
+      double totalBalance, List<Color> gradientColors, BuildContext context, String currencySymbol) {
     return SliverAppBar(
       expandedHeight: 150.0,
       backgroundColor: Colors.transparent,
@@ -80,7 +82,7 @@ class CashbookScreen extends StatelessWidget {
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
-          '₹${totalBalance.toStringAsFixed(2)}',
+          '$currencySymbol${totalBalance.toStringAsFixed(2)}',
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -127,7 +129,7 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  SliverToBoxAdapter _buildSummaryCards(double totalIncome, double totalExpense, double balance) {
+  SliverToBoxAdapter _buildSummaryCards(double totalIncome, double totalExpense, double balance, String currencySymbol) {
     final List<Color> gradientColors = balance >= 0
         ? [Colors.green.shade700, Colors.green.shade400]
         : [Colors.red.shade700, Colors.red.shade400];
@@ -138,14 +140,14 @@ class CashbookScreen extends StatelessWidget {
           children: [
             _buildSummaryCard(
               'Total Income',
-              '₹${totalIncome.toStringAsFixed(2)}',
+              '$currencySymbol${totalIncome.toStringAsFixed(2)}',
               [Colors.green.shade700, Colors.green.shade400],
               Icons.arrow_upward,
             ),
             const SizedBox(width: 16),
             _buildSummaryCard(
               'Total Expense',
-              '₹${totalExpense.toStringAsFixed(2)}',
+              '$currencySymbol${totalExpense.toStringAsFixed(2)}',
               [Colors.red.shade700, Colors.red.shade400],
               Icons.arrow_downward,
             ),
@@ -218,7 +220,7 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEntryList(BuildContext context, List<app_transaction.Transaction> entries, TransactionProvider transactionProvider) {
+  Widget _buildEntryList(BuildContext context, List<app_transaction.Transaction> entries, TransactionProvider transactionProvider, String currencySymbol) {
     if (entries.isEmpty) {
       return SliverToBoxAdapter(
         child: Center(
@@ -305,7 +307,7 @@ class CashbookScreen extends StatelessWidget {
                 title: Text(entry.note ?? 'No description', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 subtitle: Text(DateFormat('MMM dd, yyyy • hh:mm a').format(entry.date), style: TextStyle(color: Colors.grey.shade600)),
                 trailing: Text(
-                  '${isIncome ? '+' : '-'} ₹${entry.amount.toStringAsFixed(2)}',
+                  '${isIncome ? '+' : '-'} $currencySymbol${entry.amount.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: isIncome ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
@@ -321,9 +323,9 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, Person cashbookPerson, List<Color> gradientColors) {
+  Widget _buildFloatingActionButton(BuildContext context, Person cashbookPerson, List<Color> gradientColors, String currencySymbol) {
     return FloatingActionButton.extended(
-      onPressed: () => _showAddEntryDialog(context, cashbookPerson),
+      onPressed: () => _showAddEntryDialog(context, cashbookPerson, currencySymbol),
       label: const Text('Add Transaction'),
       icon: const Icon(Icons.add),
       backgroundColor: gradientColors.first,
@@ -331,7 +333,7 @@ class CashbookScreen extends StatelessWidget {
     );
   }
 
-  void _showAddEntryDialog(BuildContext context, Person cashbookPerson) {
+  void _showAddEntryDialog(BuildContext context, Person cashbookPerson, String currencySymbol) {
     final formKey = GlobalKey<FormState>();
     final descriptionController = TextEditingController();
     final amountController = TextEditingController();
@@ -363,7 +365,7 @@ class CashbookScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: amountController,
-                      decoration: const InputDecoration(labelText: 'Amount', prefixText: '₹', border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: 'Amount', prefixText: currencySymbol, border: OutlineInputBorder()),
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) return 'Please enter an amount.';

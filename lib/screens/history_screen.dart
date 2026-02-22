@@ -1,3 +1,4 @@
+import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
@@ -13,6 +14,7 @@ class HistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     return Consumer2<TransactionProvider, PersonProvider>(
       builder: (context, transactionProvider, personProvider, child) {
         final transactions = transactionProvider.transactions;
@@ -75,7 +77,7 @@ class HistoryScreen extends StatelessWidget {
               ],
             ),
           )
-              : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider),
+              : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider, currencyProvider.currencySymbol),
         );
       },
     );
@@ -86,7 +88,8 @@ class HistoryScreen extends StatelessWidget {
       List<DateTime> sortedDates,
       Map<DateTime, List<app_transaction.Transaction>> groupedTransactions,
       List<Person> persons,
-      TransactionProvider transactionProvider
+      TransactionProvider transactionProvider,
+      String currencySymbol,
       ) {
     return ListView.builder(
       padding: const EdgeInsets.only(top: 20),
@@ -113,7 +116,7 @@ class HistoryScreen extends StatelessWidget {
               final isCredit = transaction.type == app_transaction.TransactionType.credit;
 
               return Dismissible(
-                key: const Key('history_\${transaction.id}'),
+                key: Key('history_${'${transaction.id}'}'),
                 direction: DismissDirection.endToStart,
                 confirmDismiss: (direction) async {
                   return await showDialog(
@@ -187,7 +190,7 @@ class HistoryScreen extends StatelessWidget {
                       ],
                     ),
                     trailing: Text(
-                      '${isCredit ? '+' : '-'} ₹${transaction.amount.toStringAsFixed(2)}',
+                      '${isCredit ? '+' : '-'} $currencySymbol${transaction.amount.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
