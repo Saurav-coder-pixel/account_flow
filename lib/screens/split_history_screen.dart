@@ -16,7 +16,7 @@ class SplitHistoryScreen extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withOpacity(0.7)],
+              colors: [Colors.green.shade700, Colors.green.shade400],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -148,7 +148,7 @@ class SplitHistoryScreen extends StatelessWidget {
                                   .headlineSmall
                                   ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: Colors.green.shade700,
                               ),
                             ),
                           ],
@@ -225,12 +225,12 @@ class SplitHistoryScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor:
-                  Theme.of(context).primaryColor.withAlpha(40),
+                  Colors.green.shade700.withAlpha(40),
                   child: Text(
                     person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor),
+                        color: Colors.green.shade700),
                   ),
                 ),
                 const SizedBox(width: 12),

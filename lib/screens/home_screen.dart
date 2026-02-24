@@ -84,183 +84,45 @@ class _HomeScreenState extends State<HomeScreen> {
                 : [Colors.red.shade700, Colors.red.shade400];
 
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Account Flow', style: TextStyle(color: Colors.white),),
-                elevation: 0,
-                flexibleSpace: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16.0),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text(
-                            'Total Balance',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            '${currencyProvider.currencySymbol}${totalBalance.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               drawer: AppDrawer(gradientColors: gradientColors),
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  Colors.green.shade700,
-                                  Colors.green.shade400
-                                ]),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Total Credit',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${currencyProvider.currencySymbol}${totalCredit.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+              body: CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(totalBalance, gradientColors, context, currencyProvider.currencySymbol),
+                  _buildSummaryCards(totalCredit, totalDebit, currencyProvider.currencySymbol),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search People...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
+                          filled: true,
+                          fillColor: Theme.of(context).cardColor,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  Colors.red.shade700,
-                                  Colors.red.shade400
-                                ]),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Total Debit',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${currencyProvider.currencySymbol}${totalDebit.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search People...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context).cardColor,
+                        onChanged: (value) {
+                          setState(() {
+                            _searchText = value;
+                          });
+                        },
                       ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchText = value;
-                        });
-                      },
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'Recent People',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                      child: Text(
+                        'Recent People',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                  Expanded(
-                    child: homePersons.isEmpty
-                        ? const Center(
-                      child: Text('No people added yet.'),
-                    )
-                        : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).length,
-                      itemBuilder: (context, index) {
-                        final filteredPersons = homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).toList();
-                        final person = filteredPersons[index];
-                        return PersonCard(
-                          person: person,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PersonDetailScreen(person: person),
-                              ),
-                            ).then((_) => _loadData());
-                          },
-                          onEdit: () => _showEditPersonDialog(context, person),
-                          onDelete: () => _showDeleteConfirmationDialog(context, person),
-                        );
-                      },
-                    ),
-                  ),
+                  _buildPersonList(homePersons),
                 ],
               ),
               floatingActionButton: FloatingActionButton(
@@ -274,6 +136,201 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
+  SliverAppBar _buildSliverAppBar(
+      double totalBalance, List<Color> gradientColors, BuildContext context, String currencySymbol) {
+    return SliverAppBar(
+      expandedHeight: 150.0,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          '$currencySymbol${totalBalance.toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.only(top: 50.0),
+            child: Column(
+              children: [
+                Text(
+                  'Account Flow',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Total Balance',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _buildSummaryCards(double totalCredit, double totalDebit, String currencySymbol) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            _buildSummaryCard(
+              'Total Credit',
+              '$currencySymbol${totalCredit.toStringAsFixed(2)}',
+              [Colors.green.shade700, Colors.green.shade400],
+              Icons.arrow_upward,
+            ),
+            const SizedBox(width: 16),
+            _buildSummaryCard(
+              'Total Debit',
+              '$currencySymbol${totalDebit.toStringAsFixed(2)}',
+              [Colors.red.shade700, Colors.red.shade400],
+              Icons.arrow_downward,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Expanded _buildSummaryCard(
+      String title, String amount, List<Color> colors, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: colors[0].withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Icon(icon, color: Colors.white70),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonList(List<Person> homePersons) {
+    if (homePersons.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 50),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 80, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                const Text('No people added yet.', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap the "+" button to add a person.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final filteredPersons = homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).toList();
+
+    if (filteredPersons.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Text('No people found matching your search.'),
+          ),
+        ),
+      );
+    }
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          final person = filteredPersons[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: PersonCard(
+              person: person,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        PersonDetailScreen(person: person),
+                  ),
+                ).then((_) => _loadData());
+              },
+              onEdit: () => _showEditPersonDialog(context, person),
+              onDelete: () => _showDeleteConfirmationDialog(context, person),
+            ),
+          );
+        },
+        childCount: filteredPersons.length,
+      ),
+    );
+  }
+
 
   void _showAddPersonDialog(BuildContext context) {
     final nameController = TextEditingController();

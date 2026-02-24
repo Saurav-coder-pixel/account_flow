@@ -173,7 +173,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     const List<Color> gradientColors = [
-      Color(0xFF11998E), Color(0xFF38EF7D)];
+      Color(0xFF388E3C), Color(0xFF66BB6A)];
 
     return Container(
       decoration: const BoxDecoration(

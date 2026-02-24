@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 import './home_screen.dart';
@@ -24,6 +23,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
     {'code': 'EUR', 'symbol': '€', 'name': 'Euro'},
     {'code': 'GBP', 'symbol': '£', 'name': 'British Pound'},
     {'code': 'JPY', 'symbol': '¥', 'name': 'Japanese Yen'},
+    {'code': 'RUB', 'symbol': '₽', 'name': 'Russian Ruble'},
   ];
 
   void _onContinue() async {

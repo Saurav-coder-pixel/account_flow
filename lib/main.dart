@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
             routes: {
               HomeScreen.routeName: (ctx) => const HomeScreen(),
               CurrencySelectionScreen.routeName: (ctx) =>
-                  CurrencySelectionScreen(),
+              const CurrencySelectionScreen(),
             },
             debugShowCheckedModeBanner: false,
           );
