@@ -66,7 +66,9 @@ class PersonCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      person.name.isNotEmpty ? person.name[0].toUpperCase() : 'A',
+                      person.name.isNotEmpty
+                          ? person.name[0].toUpperCase()
+                          : 'A',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -96,7 +98,8 @@ class PersonCard extends StatelessWidget {
                     return FutureBuilder<double>(
                       future: personProvider.getPersonBalance(person.id!),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return _buildLoadingBalance();
                         }
 

@@ -64,8 +64,8 @@ class SplitHistoryScreen extends StatelessWidget {
               final splitId = groupedSplits.keys.elementAt(index);
               final transactions = groupedSplits[splitId]!;
               final firstTransaction = transactions.first;
-              final totalAmount =
-              transactions.fold<double>(0, (sum, item) => sum + item.amount);
+              final totalAmount = transactions.fold<double>(
+                  0, (sum, item) => sum + item.amount);
               final description = firstTransaction.note;
               final date = firstTransaction.date;
 
@@ -110,14 +110,16 @@ class SplitHistoryScreen extends StatelessWidget {
                     color: Colors.red.shade400,
                     borderRadius: BorderRadius.circular(15.0),
                   ),
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  child: const Icon(Icons.delete_sweep, color: Colors.white, size: 30),
+                  child: const Icon(Icons.delete_sweep,
+                      color: Colors.white, size: 30),
                 ),
                 child: Card(
                   margin:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   elevation: 6,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
@@ -147,9 +149,9 @@ class SplitHistoryScreen extends StatelessWidget {
                                   .textTheme
                                   .headlineSmall
                                   ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
-                              ),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700,
+                                  ),
                             ),
                           ],
                         ),
@@ -179,8 +181,7 @@ class SplitHistoryScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         FutureBuilder<List<Widget>>(
-                          future:
-                          _buildParticipantList(context, transactions),
+                          future: _buildParticipantList(context, transactions),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -188,8 +189,7 @@ class SplitHistoryScreen extends StatelessWidget {
                                   child: CircularProgressIndicator());
                             }
                             if (snapshot.hasError) {
-                              return const Text(
-                                  'Error loading participants');
+                              return const Text('Error loading participants');
                             }
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,8 +224,7 @@ class SplitHistoryScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor:
-                  Colors.green.shade700.withAlpha(40),
+                  backgroundColor: Colors.green.shade700.withAlpha(40),
                   child: Text(
                     person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
                     style: TextStyle(

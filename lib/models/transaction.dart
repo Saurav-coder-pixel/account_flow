@@ -38,7 +38,9 @@ class Transaction {
       amount: map['amount'].toDouble(),
       note: map['note'],
       date: DateTime.parse(map['date']),
-      type: map['type'] == 'credit' ? TransactionType.credit : TransactionType.debit,
+      type: map['type'] == 'credit'
+          ? TransactionType.credit
+          : TransactionType.debit,
       splitId: map['split_id'],
     );
   }

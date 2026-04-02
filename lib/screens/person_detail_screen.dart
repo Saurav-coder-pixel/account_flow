@@ -15,7 +15,8 @@ class PersonDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<TransactionProvider>(
       builder: (context, transactionProvider, child) {
-        final personTransactions = transactionProvider.getTransactionsForPerson(person.id!);
+        final personTransactions =
+            transactionProvider.getTransactionsForPerson(person.id!);
 
         double totalCredit = 0;
         double totalDebit = 0;
@@ -54,7 +55,8 @@ class PersonDetailScreen extends StatelessWidget {
               Expanded(
                 child: personTransactions.isEmpty
                     ? const Center(child: Text('No transactions yet.'))
-                    : _buildTransactionsList(context, personTransactions, transactionProvider),
+                    : _buildTransactionsList(
+                        context, personTransactions, transactionProvider),
               ),
             ],
           ),
@@ -96,7 +98,10 @@ class PersonDetailScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: balance >= 0 ? Colors.green.shade50 : Colors.red.shade50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: balance >= 0 ? Colors.green.shade200 : Colors.red.shade200),
+              border: Border.all(
+                  color: balance >= 0
+                      ? Colors.green.shade200
+                      : Colors.red.shade200),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -105,7 +110,9 @@ class PersonDetailScreen extends StatelessWidget {
                   "Running Balance",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                    color: balance >= 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                   ),
                 ),
                 Text(
@@ -113,7 +120,9 @@ class PersonDetailScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                    color: balance >= 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                   ),
                 ),
               ],
@@ -136,11 +145,13 @@ class PersonDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text(label,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             const SizedBox(height: 4),
             Text(
               "₹${amount.toStringAsFixed(2)}",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold, color: color),
             ),
           ],
         ),
@@ -148,7 +159,10 @@ class PersonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionsList(BuildContext context, List<app_transaction.Transaction> transactions, TransactionProvider provider) {
+  Widget _buildTransactionsList(
+      BuildContext context,
+      List<app_transaction.Transaction> transactions,
+      TransactionProvider provider) {
     return ListView.builder(
       itemCount: transactions.length,
       padding: const EdgeInsets.all(8),
@@ -187,7 +201,8 @@ class PersonDetailScreen extends StatelessWidget {
             ),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: isCredit ? Colors.green.shade50 : Colors.red.shade50,
+                backgroundColor:
+                    isCredit ? Colors.green.shade50 : Colors.red.shade50,
                 child: Icon(
                   isCredit ? Icons.add : Icons.remove,
                   color: isCredit ? Colors.green : Colors.red,
@@ -197,13 +212,15 @@ class PersonDetailScreen extends StatelessWidget {
                 "₹${t.amount.toStringAsFixed(2)}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
+              subtitle:
+                  Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
               trailing: Text(DateFormat('dd MMM, hh:mm a').format(t.date)),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(person: person, transaction: t),
+                    builder: (context) =>
+                        AddTransactionScreen(person: person, transaction: t),
                   ),
                 );
               },

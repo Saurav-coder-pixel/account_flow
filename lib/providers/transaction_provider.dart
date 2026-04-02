@@ -24,7 +24,8 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateTransaction(app_transaction.Transaction transaction) async {
+  Future<void> updateTransaction(
+      app_transaction.Transaction transaction) async {
     await _dbHelper.updateTransaction(transaction);
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     if (index != -1) {
@@ -36,10 +37,12 @@ class TransactionProvider with ChangeNotifier {
   Future<void> deleteTransaction(int transactionId, {String? splitId}) async {
     if (splitId != null && splitId.isNotEmpty) {
       await _dbHelper.deleteTransactionsBySplitId(splitId);
-      _transactions.removeWhere((transaction) => transaction.splitId == splitId);
+      _transactions
+          .removeWhere((transaction) => transaction.splitId == splitId);
     } else {
       await _dbHelper.deleteTransaction(transactionId);
-      _transactions.removeWhere((transaction) => transaction.id == transactionId);
+      _transactions
+          .removeWhere((transaction) => transaction.id == transactionId);
     }
     notifyListeners();
   }

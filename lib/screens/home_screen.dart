@@ -87,11 +87,14 @@ class _HomeScreenState extends State<HomeScreen> {
               drawer: AppDrawer(gradientColors: gradientColors),
               body: CustomScrollView(
                 slivers: [
-                  _buildSliverAppBar(totalBalance, gradientColors, context, currencyProvider.currencySymbol),
-                  _buildSummaryCards(totalCredit, totalDebit, currencyProvider.currencySymbol),
+                  _buildSliverAppBar(totalBalance, gradientColors, context,
+                      currencyProvider.currencySymbol),
+                  _buildSummaryCards(
+                      totalCredit, totalDebit, currencyProvider.currencySymbol),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8.0),
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Search People...',
@@ -113,12 +116,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 16.0),
                       child: Text(
                         'Recent People',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ),
                   ),
@@ -128,7 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
               floatingActionButton: FloatingActionButton(
                 onPressed: () => _showAddPersonDialog(context),
                 backgroundColor: gradientColors[0],
-                child: const Icon(Icons.add, color: Colors.white,),
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
               ),
             );
           },
@@ -137,8 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  SliverAppBar _buildSliverAppBar(
-      double totalBalance, List<Color> gradientColors, BuildContext context, String currencySymbol) {
+  SliverAppBar _buildSliverAppBar(double totalBalance,
+      List<Color> gradientColors, BuildContext context, String currencySymbol) {
     return SliverAppBar(
       expandedHeight: 150.0,
       backgroundColor: Colors.transparent,
@@ -194,7 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildSummaryCards(double totalCredit, double totalDebit, String currencySymbol) {
+  SliverToBoxAdapter _buildSummaryCards(
+      double totalCredit, double totalDebit, String currencySymbol) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -276,9 +285,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline, size: 80, color: Colors.grey.shade400),
+                Icon(Icons.people_outline,
+                    size: 80, color: Colors.grey.shade400),
                 const SizedBox(height: 16),
-                const Text('No people added yet.', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const Text('No people added yet.',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey)),
                 const SizedBox(height: 8),
                 Text(
                   'Tap the "+" button to add a person.',
@@ -292,7 +306,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final filteredPersons = homePersons.where((person) => person.name.toLowerCase().contains(_searchText.toLowerCase())).toList();
+    final filteredPersons = homePersons
+        .where((person) =>
+            person.name.toLowerCase().contains(_searchText.toLowerCase()))
+        .toList();
 
     if (filteredPersons.isEmpty) {
       return const SliverToBoxAdapter(
@@ -306,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-            (context, index) {
+        (context, index) {
           final person = filteredPersons[index];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -316,8 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        PersonDetailScreen(person: person),
+                    builder: (context) => PersonDetailScreen(person: person),
                   ),
                 ).then((_) => _loadData());
               },
@@ -330,7 +346,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   void _showAddPersonDialog(BuildContext context) {
     final nameController = TextEditingController();
@@ -364,8 +379,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (formKey.currentState!.validate()) {
                   final name = nameController.text;
                   final personProvider =
-                  Provider.of<PersonProvider>(context, listen: false);
-                  final newPerson = Person(name: name, createdAt: DateTime.now(), isCashbook: false);
+                      Provider.of<PersonProvider>(context, listen: false);
+                  final newPerson = Person(
+                      name: name, createdAt: DateTime.now(), isCashbook: false);
                   await personProvider.addPerson(newPerson);
                   _loadData();
                   Navigator.pop(context);
@@ -411,7 +427,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (formKey.currentState!.validate()) {
                   final newName = nameController.text;
                   final personProvider =
-                  Provider.of<PersonProvider>(context, listen: false);
+                      Provider.of<PersonProvider>(context, listen: false);
                   await personProvider
                       .updatePerson(person.copyWith(name: newName));
                   _loadData();
@@ -432,7 +448,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Delete Person'),
-          content: Text('Are you sure you want to delete ${person.name}? This will also delete all their transactions.'),
+          content: Text(
+              'Are you sure you want to delete ${person.name}? This will also delete all their transactions.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -441,8 +458,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ElevatedButton(
               onPressed: () async {
                 final personProvider =
-                Provider.of<PersonProvider>(context, listen: false);
-                final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+                    Provider.of<PersonProvider>(context, listen: false);
+                final transactionProvider =
+                    Provider.of<TransactionProvider>(context, listen: false);
 
                 await personProvider.deletePerson(person.id!);
                 transactionProvider.removeTransactionsByPersonId(person.id!);
@@ -452,7 +470,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Delete', style: TextStyle(color: Colors.white),),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

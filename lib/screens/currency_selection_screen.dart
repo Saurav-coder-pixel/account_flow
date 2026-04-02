@@ -28,11 +28,14 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
 
   void _onContinue() async {
     if (_selectedCurrency != null && _selectedSymbol != null) {
-      final currencyProvider = Provider.of<CurrencyProvider>(context, listen: false);
+      final currencyProvider =
+          Provider.of<CurrencyProvider>(context, listen: false);
       await currencyProvider.setCurrency(_selectedSymbol!, _selectedCurrency!);
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+        // Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()));
       }
     }
   }
@@ -86,9 +89,10 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: ListView.builder(
                         itemCount: _currencies.length,
-                        itemBuilder: (ctx, index) {
+                        itemBuilder: (context, index) {
                           final currency = _currencies[index];
-                          final isSelected = currency['code'] == _selectedCurrency;
+                          final isSelected =
+                              currency['symbol'] == _selectedSymbol;
                           return GestureDetector(
                             onTap: () {
                               setState(() {
@@ -97,12 +101,17 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                               });
                             },
                             child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.green.withOpacity(0.1) : Colors.transparent,
+                                color: isSelected
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected ? Colors.green : Colors.grey.shade300,
+                                  color: isSelected
+                                      ? Colors.green
+                                      : Colors.grey.shade300,
                                   width: 2,
                                 ),
                               ),
@@ -121,7 +130,8 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                                   ),
                                 ),
                                 trailing: isSelected
-                                    ? const Icon(Icons.check_circle, color: Colors.green)
+                                    ? const Icon(Icons.check_circle,
+                                        color: Colors.green)
                                     : null,
                               ),
                             ),

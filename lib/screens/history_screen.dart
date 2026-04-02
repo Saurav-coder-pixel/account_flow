@@ -35,20 +35,26 @@ class HistoryScreen extends StatelessWidget {
             ? [Colors.green.shade700, Colors.green.shade400]
             : [Colors.red.shade700, Colors.red.shade400];
 
-        final groupedTransactions = <DateTime, List<app_transaction.Transaction>>{};
+        final groupedTransactions =
+            <DateTime, List<app_transaction.Transaction>>{};
         for (final transaction in transactions) {
-          final date = DateTime(transaction.date.year, transaction.date.month, transaction.date.day);
+          final date = DateTime(transaction.date.year, transaction.date.month,
+              transaction.date.day);
           if (groupedTransactions[date] == null) {
             groupedTransactions[date] = [];
           }
           groupedTransactions[date]!.add(transaction);
         }
 
-        final sortedDates = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
+        final sortedDates = groupedTransactions.keys.toList()
+          ..sort((a, b) => b.compareTo(a));
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Transaction History', style: TextStyle(color: Colors.white),),
+            title: const Text(
+              'Transaction History',
+              style: TextStyle(color: Colors.white),
+            ),
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -62,35 +68,47 @@ class HistoryScreen extends StatelessWidget {
           drawer: AppDrawer(gradientColors: gradientColors),
           body: transactions.isEmpty
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history_edu, size: 100, color: Colors.grey.shade400),
-                const SizedBox(height: 20),
-                const Text('No transactions yet.', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 10),
-                Text(
-                  'Your transaction history will appear here.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          )
-              : _buildTransactionListView(context, sortedDates, groupedTransactions, persons, transactionProvider, currencyProvider.currencySymbol),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history_edu,
+                          size: 100, color: Colors.grey.shade400),
+                      const SizedBox(height: 20),
+                      const Text('No transactions yet.',
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Your transaction history will appear here.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 16, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                )
+              : _buildTransactionListView(
+                  context,
+                  sortedDates,
+                  groupedTransactions,
+                  persons,
+                  transactionProvider,
+                  currencyProvider.currencySymbol),
         );
       },
     );
   }
 
   Widget _buildTransactionListView(
-      BuildContext context,
-      List<DateTime> sortedDates,
-      Map<DateTime, List<app_transaction.Transaction>> groupedTransactions,
-      List<Person> persons,
-      TransactionProvider transactionProvider,
-      String currencySymbol,
-      ) {
+    BuildContext context,
+    List<DateTime> sortedDates,
+    Map<DateTime, List<app_transaction.Transaction>> groupedTransactions,
+    List<Person> persons,
+    TransactionProvider transactionProvider,
+    String currencySymbol,
+  ) {
     return ListView.builder(
       padding: const EdgeInsets.only(top: 20),
       itemCount: sortedDates.length,
@@ -112,8 +130,14 @@ class HistoryScreen extends StatelessWidget {
               ),
             ),
             ...transactionsOnDate.map((transaction) {
-              final person = persons.firstWhere((p) => p.id == transaction.personId, orElse: () => Person(id: 0, name: 'Unknown Person', createdAt: DateTime.now()));
-              final isCredit = transaction.type == app_transaction.TransactionType.credit;
+              final person = persons.firstWhere(
+                  (p) => p.id == transaction.personId,
+                  orElse: () => Person(
+                      id: 0,
+                      name: 'Unknown Person',
+                      createdAt: DateTime.now()));
+              final isCredit =
+                  transaction.type == app_transaction.TransactionType.credit;
 
               return Dismissible(
                 key: Key('history_${'${transaction.id}'}'),
@@ -124,7 +148,8 @@ class HistoryScreen extends StatelessWidget {
                     builder: (BuildContext context) {
                       return AlertDialog(
                         title: const Text('Delete Entry'),
-                        content: const Text('Are you sure you want to delete this entry?'),
+                        content: const Text(
+                            'Are you sure you want to delete this entry?'),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
@@ -132,7 +157,8 @@ class HistoryScreen extends StatelessWidget {
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            style: TextButton.styleFrom(
+                                foregroundColor: Colors.red),
                             child: const Text('Delete'),
                           ),
                         ],
@@ -141,42 +167,61 @@ class HistoryScreen extends StatelessWidget {
                   );
                 },
                 onDismissed: (direction) {
-                  transactionProvider.deleteTransaction(transaction.id!, splitId: transaction.splitId);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transaction deleted'), backgroundColor: Colors.red,));
+                  transactionProvider.deleteTransaction(transaction.id!,
+                      splitId: transaction.splitId);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Transaction deleted'),
+                    backgroundColor: Colors.red,
+                  ));
                 },
                 background: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(15)
-                  ),
+                      borderRadius: BorderRadius.circular(15)),
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  child: const Icon(Icons.delete_forever, color: Colors.white, size: 30,),
+                  child: const Icon(
+                    Icons.delete_forever,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
                 child: Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   elevation: 3,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     leading: CircleAvatar(
                       radius: 28,
-                      backgroundColor: isCredit ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                      backgroundColor: isCredit
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
                       child: Icon(
-                        isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                        isCredit
+                            ? Icons.arrow_downward_rounded
+                            : Icons.arrow_upward_rounded,
                         color: isCredit ? Colors.green : Colors.red,
                         size: 30,
                       ),
                     ),
                     title: Text(
                       person.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 17),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(transaction.note ?? (isCredit ? "Credit" : "Debit"), style: const TextStyle(fontSize: 15),),
+                        Text(
+                          transaction.note ?? (isCredit ? "Credit" : "Debit"),
+                          style: const TextStyle(fontSize: 15),
+                        ),
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
@@ -201,7 +246,8 @@ class HistoryScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddTransactionScreen(person: person, transaction: transaction),
+                          builder: (context) => AddTransactionScreen(
+                              person: person, transaction: transaction),
                         ),
                       );
                     },
@@ -209,7 +255,12 @@ class HistoryScreen extends StatelessWidget {
                 ),
               );
             }).toList(),
-            const Divider(height: 20, thickness: 1, indent: 16, endIndent: 16,)
+            const Divider(
+              height: 20,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+            )
           ],
         );
       },

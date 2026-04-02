@@ -11,7 +11,8 @@ class AddTransactionScreen extends StatefulWidget {
   final Person person;
   final app_transaction.Transaction? transaction;
 
-  const AddTransactionScreen({super.key, required this.person, this.transaction});
+  const AddTransactionScreen(
+      {super.key, required this.person, this.transaction});
 
   @override
   _AddTransactionScreenState createState() => _AddTransactionScreenState();
@@ -22,7 +23,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  app_transaction.TransactionType _selectedType = app_transaction.TransactionType.credit;
+  app_transaction.TransactionType _selectedType =
+      app_transaction.TransactionType.credit;
   DateTime _selectedDate = DateTime.now();
   bool get _isEditing => widget.transaction != null;
 
@@ -139,7 +141,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Transaction for ${widget.person.name}',
@@ -160,9 +163,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                       Row(
                                         children: [
                                           Expanded(
-                                            child: RadioListTile<app_transaction.TransactionType>(
-                                              title: const Text('Money you given'),
-                                              value: app_transaction.TransactionType.credit,
+                                            child: RadioListTile<
+                                                app_transaction
+                                                .TransactionType>(
+                                              title:
+                                                  const Text('Money you given'),
+                                              value: app_transaction
+                                                  .TransactionType.credit,
                                               groupValue: _selectedType,
                                               onChanged: (value) {
                                                 setState(() {
@@ -173,9 +180,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                             ),
                                           ),
                                           Expanded(
-                                            child: RadioListTile<app_transaction.TransactionType>(
-                                              title: const Text('Money you received'),
-                                              value: app_transaction.TransactionType.debit,
+                                            child: RadioListTile<
+                                                app_transaction
+                                                .TransactionType>(
+                                              title: const Text(
+                                                  'Money you received'),
+                                              value: app_transaction
+                                                  .TransactionType.debit,
                                               groupValue: _selectedType,
                                               onChanged: (value) {
                                                 setState(() {
@@ -190,26 +201,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                       const SizedBox(height: 16),
                                       TextFormField(
                                         controller: _amountController,
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
                                         decoration: InputDecoration(
                                           labelText: 'Amount',
-                                          hintText: 'Enter amount or calculation (e.g., 50*2)',
-                                          prefixIcon: const Icon(Icons.currency_rupee),
+                                          hintText:
+                                              'Enter amount or calculation (e.g., 50*2)',
+                                          prefixIcon:
+                                              const Icon(Icons.currency_rupee),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                         validator: (value) {
-                                          if (value == null || value.trim().isEmpty) {
+                                          if (value == null ||
+                                              value.trim().isEmpty) {
                                             return 'Please enter an amount';
                                           }
                                           // The rest of the validation is handled by the calculation logic
                                           return null;
                                         },
                                       ),
-                                      if (_calculation.isNotEmpty && _result.isNotEmpty)
+                                      if (_calculation.isNotEmpty &&
+                                          _result.isNotEmpty)
                                         Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
                                           child: Text(
                                             _result,
                                             style: const TextStyle(
@@ -228,19 +246,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                           hintText: 'Enter transaction details',
                                           prefixIcon: const Icon(Icons.note),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(height: 16),
                                       ListTile(
-                                        leading: const Icon(Icons.calendar_today),
+                                        leading:
+                                            const Icon(Icons.calendar_today),
                                         title: const Text('Date'),
-                                        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
+                                        subtitle: Text(
+                                            DateFormat('MMM dd, yyyy')
+                                                .format(_selectedDate)),
                                         onTap: _selectDate,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          side: BorderSide(color: Colors.grey.shade400),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          side: BorderSide(
+                                              color: Colors.grey.shade400),
                                         ),
                                       ),
                                     ],
@@ -251,11 +275,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               ElevatedButton(
                                 onPressed: _saveTransaction,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: _selectedType == app_transaction.TransactionType.credit
+                                  backgroundColor: _selectedType ==
+                                          app_transaction.TransactionType.credit
                                       ? Colors.green
                                       : Colors.red,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -337,7 +363,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         double amount;
-        String expression = _amountController.text.replaceAll('×', '*').replaceAll('÷', '/');
+        String expression =
+            _amountController.text.replaceAll('×', '*').replaceAll('÷', '/');
         try {
           Parser p = Parser();
           Expression exp = p.parse(expression);
@@ -353,7 +380,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           return;
         }
 
-        final note = _noteController.text.trim().isEmpty ? null : _noteController.text.trim();
+        final note = _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim();
 
         if (_isEditing) {
           final updatedTransaction = widget.transaction!.copyWith(
@@ -381,7 +410,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Transaction ${_isEditing ? 'updated' : 'added'} successfully!'),
+            content: Text(
+                'Transaction ${_isEditing ? 'updated' : 'added'} successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -391,7 +421,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         print(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to ${_isEditing ? 'update' : 'add'} transaction. Please try again.'),
+            content: Text(
+                'Failed to ${_isEditing ? 'update' : 'add'} transaction. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -404,7 +435,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Transaction'),
-        content: const Text('Are you sure you want to delete this transaction?'),
+        content:
+            const Text('Are you sure you want to delete this transaction?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

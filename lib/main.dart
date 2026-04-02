@@ -42,9 +42,9 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             home: const SplashScreen(),
             routes: {
-              HomeScreen.routeName: (ctx) => const HomeScreen(),
-              CurrencySelectionScreen.routeName: (ctx) =>
-              const CurrencySelectionScreen(),
+              HomeScreen.routeName: (context) => const HomeScreen(),
+              CurrencySelectionScreen.routeName: (context) =>
+                  const CurrencySelectionScreen(),
             },
             debugShowCheckedModeBanner: false,
           );

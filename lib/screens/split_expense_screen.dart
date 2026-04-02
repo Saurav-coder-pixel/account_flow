@@ -19,7 +19,9 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final List<TextEditingController> _nameControllers = [TextEditingController()];
+  final List<TextEditingController> _nameControllers = [
+    TextEditingController()
+  ];
 
   @override
   void dispose() {
@@ -39,8 +41,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final description = _descriptionController.text;
-    final otherPersonNames =
-    _nameControllers.map((e) => e.text.trim()).where((e) => e.isNotEmpty).toList();
+    final otherPersonNames = _nameControllers
+        .map((e) => e.text.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
 
     final List<String> newPersonNames = [];
     for (final name in otherPersonNames) {
@@ -109,14 +113,18 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
     if (!mounted) return;
 
-    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+    final transactionProvider =
+        Provider.of<TransactionProvider>(context, listen: false);
     final splitId = const Uuid().v4();
 
     const cashbookPersonName = 'Personal Cashbook';
     Person? cashbookPerson =
-    await personProvider.findPersonByName(cashbookPersonName);
-    cashbookPerson ??= await personProvider
-        .addPerson(Person(name: cashbookPersonName, createdAt: DateTime.now(), isCashbook: true,));
+        await personProvider.findPersonByName(cashbookPersonName);
+    cashbookPerson ??= await personProvider.addPerson(Person(
+      name: cashbookPersonName,
+      createdAt: DateTime.now(),
+      isCashbook: true,
+    ));
 
     final totalExpenseTransaction = app_transaction.Transaction(
       personId: cashbookPerson.id!,
@@ -142,8 +150,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
     for (final name in otherPersonNames) {
       Person? person = await personProvider.findPersonByName(name);
-      person ??= await personProvider
-          .addPerson(Person(name: name, createdAt: DateTime.now(), isCashbook: false,));
+      person ??= await personProvider.addPerson(Person(
+        name: name,
+        createdAt: DateTime.now(),
+        isCashbook: false,
+      ));
 
       final otherPersonTransaction = app_transaction.Transaction(
         personId: person.id!,
@@ -164,7 +175,8 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Expense split successfully! View details in your Cashbook.'),
+        content:
+            Text('Expense split successfully! View details in your Cashbook.'),
         backgroundColor: Colors.green,
       ),
     );
@@ -172,8 +184,7 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const List<Color> gradientColors = [
-      Color(0xFF388E3C), Color(0xFF66BB6A)];
+    const List<Color> gradientColors = [Color(0xFF388E3C), Color(0xFF66BB6A)];
 
     return Container(
       decoration: const BoxDecoration(
@@ -188,7 +199,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Split Expense', style: TextStyle(color: Colors.white),),
+          title: const Text(
+            'Split Expense',
+            style: TextStyle(color: Colors.white),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.history, color: Colors.white),
@@ -232,7 +246,9 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Split Expense', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text('Split Expense',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -252,7 +268,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
           children: [
             Text(
               'Expense Details',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -262,7 +281,8 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                 prefixIcon: Icon(Icons.currency_rupee),
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null ||
                     value.isEmpty ||
@@ -305,7 +325,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
           children: [
             Text(
               'Split with (optional)',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ..._buildNameFields(),
@@ -318,8 +341,11 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
                     _nameControllers.add(TextEditingController());
                   });
                 },
-                icon: const Icon(Icons.add_circle_outline, color: Color(0xFF6A1B9A)),
-                label: const Text('Add Person', style: TextStyle(color: Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.add_circle_outline,
+                    color: Color(0xFF6A1B9A)),
+                label: const Text('Add Person',
+                    style: TextStyle(
+                        color: Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -347,7 +373,8 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
             ),
             if (_nameControllers.length > 1)
               IconButton(
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                icon:
+                    const Icon(Icons.remove_circle_outline, color: Colors.red),
                 onPressed: () {
                   setState(() {
                     _nameControllers[index].dispose();

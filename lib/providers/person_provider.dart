@@ -3,8 +3,7 @@ import '../models/person.dart';
 import '../helpers/database_helper.dart';
 
 class PersonProvider with ChangeNotifier {
-
-  Future<void> refreshPersonBalance(int personId) async{
+  Future<void> refreshPersonBalance(int personId) async {
     notifyListeners();
   }
 

@@ -81,7 +81,8 @@ class _SplashScreenState extends State<SplashScreen>
     // Ensure the animation runs for a minimum duration while data loads.
     final dataLoader = Future.wait([
       Provider.of<PersonProvider>(context, listen: false).loadPersons(),
-      Provider.of<TransactionProvider>(context, listen: false).loadAllTransactions(),
+      Provider.of<TransactionProvider>(context, listen: false)
+          .loadAllTransactions(),
     ]);
 
     final timer = Future.delayed(const Duration(seconds: 3));
@@ -92,7 +93,8 @@ class _SplashScreenState extends State<SplashScreen>
       if (isCurrencySelected) {
         Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
       } else {
-        Navigator.of(context).pushReplacementNamed(CurrencySelectionScreen.routeName);
+        Navigator.of(context)
+            .pushReplacementNamed(CurrencySelectionScreen.routeName);
       }
     }
   }

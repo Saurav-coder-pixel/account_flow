@@ -8,7 +8,8 @@ void main() {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  testWidgets('App starts and shows splash screen', (WidgetTester tester) async {
+  testWidgets('App starts and shows splash screen',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
