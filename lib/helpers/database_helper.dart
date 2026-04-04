@@ -41,26 +41,26 @@ class DatabaseHelper {
 
   Future<void> _createDb(Database db, int version) async {
     await db.execute('''
-                                                                                                                CREATE TABLE persons (
-                                                                                                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                                                                                name TEXT NOT NULL,
-                                                                                                                                        created_at TEXT NOT NULL,
-                                                                                                                                                is_cashbook INTEGER NOT NULL DEFAULT 0
-                                                                                                                                                      )
-                                                                                                                                                          ''');
+                         CREATE TABLE persons (
+                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                         name TEXT NOT NULL,
+                         created_at TEXT NOT NULL,
+                         is_cashbook INTEGER NOT NULL DEFAULT 0
+                         )
+                    ''');
 
     await db.execute('''
-                                                                                                                                                                    CREATE TABLE transactions (
-                                                                                                                                                                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                                                                                                                                    person_id INTEGER NOT NULL,
-                                                                                                                                                                                            amount REAL NOT NULL,
-                                                                                                                                                                                                    note TEXT,
-                                                                                                                                                                                                            date TEXT NOT NULL,
-                                                                                                                                                                                                                    type TEXT NOT NULL,
-                                                                                                                                                                                                                            split_id TEXT,
-                                                                                                                                                                                                                                    FOREIGN KEY (person_id) REFERENCES persons (id) ON DELETE CASCADE
-                                                                                                                                                                                                                                          )
-                                                                                                                                                                                                                                              ''');
+                        CREATE TABLE transactions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        person_id INTEGER NOT NULL,
+                        amount REAL NOT NULL,
+                        note TEXT,
+                        date TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        split_id TEXT,
+                        FOREIGN KEY (person_id) REFERENCES persons (id) ON DELETE CASCADE
+                        )
+                    ''');
   }
 
   // Person operations
@@ -160,11 +160,11 @@ class DatabaseHelper {
   Future<double> getPersonBalance(int personId) async {
     final db = await database;
     final result = await db.rawQuery('''
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SELECT 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    SUM(CASE WHEN type = 'credit' THEN amount ELSE -amount END) as balance
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          FROM transactions 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                WHERE person_id = ?
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ''',
+                            SELECT 
+                            SUM(CASE WHEN type = 'credit' THEN amount ELSE -amount END) as balance
+                            FROM transactions 
+                            WHERE person_id = ?
+                            ''',
         [personId]);
 
     if (result.isNotEmpty && result.first['balance'] != null) {

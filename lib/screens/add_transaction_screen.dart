@@ -167,7 +167,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                                 app_transaction
                                                 .TransactionType>(
                                               title:
-                                                  const Text('Money you given'),
+                                                  const Text('You Got'),
                                               value: app_transaction
                                                   .TransactionType.credit,
                                               groupValue: _selectedType,
@@ -184,7 +184,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                                 app_transaction
                                                 .TransactionType>(
                                               title: const Text(
-                                                  'Money you received'),
+                                                  'You Gave'),
                                               value: app_transaction
                                                   .TransactionType.debit,
                                               groupValue: _selectedType,
