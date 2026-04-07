@@ -5,6 +5,7 @@ import '../models/person.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import 'add_transaction_screen.dart';
+import '../widgets/transaction_card.dart';
 
 class PersonDetailScreen extends StatelessWidget {
   final Person person;
@@ -163,16 +164,30 @@ class PersonDetailScreen extends StatelessWidget {
       BuildContext context,
       List<app_transaction.Transaction> transactions,
       TransactionProvider provider) {
-    return ListView.builder(
-      itemCount: transactions.length,
-      padding: const EdgeInsets.all(8),
-      itemBuilder: (context, index) {
-        final t = transactions[index];
-        final isCredit = t.type == app_transaction.TransactionType.credit;
+    if (transactions.isEmpty) {
+      return const Center(child: Text('No transactions yet.'));
+    }
 
-        return Dismissible(
+    // Sort transactions chronologically for grouping
+    final sortedTransactions = List<app_transaction.Transaction>.from(transactions)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final List<Widget> items = [];
+    DateTime? lastTimestamp;
+
+    for (var i = 0; i < sortedTransactions.length; i++) {
+      final t = sortedTransactions[i];
+
+      // Add a divider if it's the first item or far from the last one (e.g., > 1 hour)
+      if (lastTimestamp == null ||
+          t.date.difference(lastTimestamp).abs().inMinutes > 60) {
+        items.add(_buildTimestampDivider(t.date));
+      }
+
+      items.add(
+        Dismissible(
           key: Key(t.id.toString()),
-          direction: DismissDirection.endToStart,
+          direction: DismissDirection.horizontal,
           onDismissed: (direction) {
             provider.deleteTransaction(t.id!);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -188,46 +203,52 @@ class PersonDetailScreen extends StatelessWidget {
             );
           },
           background: Container(
-            color: Colors.red,
+            color: Colors.red.withOpacity(0.1),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.red),
+          ),
+          secondaryBackground: Container(
+            color: Colors.red.withOpacity(0.1),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Icon(Icons.delete, color: Colors.white),
+            child: const Icon(Icons.delete, color: Colors.red),
           ),
-          child: Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: Colors.grey.shade200),
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor:
-                    isCredit ? Colors.green.shade50 : Colors.red.shade50,
-                child: Icon(
-                  isCredit ? Icons.add : Icons.remove,
-                  color: isCredit ? Colors.green : Colors.red,
-                ),
-              ),
-              title: Text(
-                "₹${t.amount.toStringAsFixed(2)}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle:
-                  Text(t.note ?? (isCredit ? "Credit Entry" : "Debit Entry")),
-              trailing: Text(DateFormat('dd MMM, hh:mm a').format(t.date)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        AddTransactionScreen(person: person, transaction: t),
-                  ),
-                );
-              },
+          child: TransactionCard(
+            transaction: t,
+            personName: person.name,
+            onDelete: () {
+              provider.deleteTransaction(t.id!);
+            },
+          ),
+        ),
+      );
+      lastTimestamp = t.date;
+    }
+
+    return ListView.builder(
+      itemCount: items.length,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemBuilder: (context, index) => items[index],
+    );
+  }
+
+  Widget _buildTimestampDivider(DateTime date) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              DateFormat('EEEE, h:mm a').format(date),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ),
-        );
-      },
+          const Expanded(child: Divider()),
+        ],
+      ),
     );
   }
 }

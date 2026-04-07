@@ -4,77 +4,90 @@ import '../models/transaction.dart' as app_transaction;
 
 class TransactionCard extends StatelessWidget {
   final app_transaction.Transaction transaction;
+  final String personName;
   final VoidCallback onDelete;
 
   const TransactionCard({
     Key? key,
     required this.transaction,
+    required this.personName,
     required this.onDelete,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final isCredit = transaction.type == app_transaction.TransactionType.credit;
-    final color = isCredit ? Colors.green : Colors.red;
+    final alignment =
+        isCredit ? Alignment.centerLeft : Alignment.centerRight;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
-          child: Icon(
-            isCredit ? Icons.add : Icons.remove,
-            color: color,
-          ),
-        ),
-        title: Row(
-          children: [
-            Text(
-              '₹${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return Align(
+      alignment: alignment,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        width: MediaQuery.of(context).size.width * 0.65,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isCredit ? 'CREDIT' : 'DEBIT',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+          ],
+        ),
+        child: InkWell(
+          onLongPress: onDelete,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isCredit ? 'Payment to you' : 'Payment to $personName',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  '₹${transaction.amount.toInt()}',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Paid • ${DateFormat('dd MMM').format(transaction.date)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Colors.black54,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (transaction.note != null && transaction.note!.isNotEmpty)
-              Text(
-                transaction.note!,
-                style: const TextStyle(fontSize: 14),
-              ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('MMM dd, yyyy • hh:mm a').format(transaction.date),
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.grey),
-          onPressed: onDelete,
+          ),
         ),
       ),
     );
