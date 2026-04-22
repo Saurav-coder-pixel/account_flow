@@ -44,7 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, personSnapshot) {
         if (personSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Account Flow')),
+            appBar: AppBar(
+              iconTheme: const IconThemeData(color: Colors.white),
+                title: const Text('Account Flow')),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
