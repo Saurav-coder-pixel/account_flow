@@ -15,6 +15,7 @@ class AddTransactionScreen extends StatefulWidget {
       {super.key, required this.person, this.transaction});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AddTransactionScreenState createState() => _AddTransactionScreenState();
 }
 
@@ -163,6 +164,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                       Row(
                                         children: [
                                           Expanded(
+                                            // ignore: deprecated_member_use
                                             child: RadioListTile<
                                                 app_transaction
                                                 .TransactionType>(
@@ -170,7 +172,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                                   const Text('You Got'),
                                               value: app_transaction
                                                   .TransactionType.credit,
+                                              // ignore: deprecated_member_use
                                               groupValue: _selectedType,
+                                              // ignore: deprecated_member_use
                                               onChanged: (value) {
                                                 setState(() {
                                                   _selectedType = value!;
@@ -180,6 +184,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                             ),
                                           ),
                                           Expanded(
+                                            // ignore: deprecated_member_use
                                             child: RadioListTile<
                                                 app_transaction
                                                 .TransactionType>(
@@ -187,7 +192,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                                   'You Gave'),
                                               value: app_transaction
                                                   .TransactionType.debit,
+                                              // ignore: deprecated_member_use
                                               groupValue: _selectedType,
+                                              // ignore: deprecated_member_use
                                               onChanged: (value) {
                                                 setState(() {
                                                   _selectedType = value!;
@@ -219,7 +226,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                               value.trim().isEmpty) {
                                             return 'Please enter an amount';
                                           }
-                                          // The rest of the validation is handled by the calculation logic
                                           return null;
                                         },
                                       ),
@@ -361,6 +367,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
+      // Cache providers before any await
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
+      final personProvider =
+          Provider.of<PersonProvider>(context, listen: false);
       try {
         double amount;
         String expression =
@@ -371,12 +382,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ContextModel cm = ContextModel();
           amount = exp.evaluate(EvaluationType.REAL, cm);
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid calculation.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid calculation.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
           return;
         }
 
@@ -391,8 +404,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             date: _selectedDate,
             type: _selectedType,
           );
-          await Provider.of<TransactionProvider>(context, listen: false)
-              .updateTransaction(updatedTransaction);
+          await transactionProvider.updateTransaction(updatedTransaction);
         } else {
           final newTransaction = app_transaction.Transaction(
             personId: widget.person.id!,
@@ -401,12 +413,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             date: _selectedDate,
             type: _selectedType,
           );
-          await Provider.of<TransactionProvider>(context, listen: false)
-              .addTransaction(newTransaction);
+          await transactionProvider.addTransaction(newTransaction);
         }
 
-        await Provider.of<PersonProvider>(context, listen: false)
-            .refreshPersonBalance(widget.person.id!);
+        await personProvider.refreshPersonBalance(widget.person.id!);
+
+        if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -418,14 +430,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         Navigator.pop(context);
       } catch (e) {
-        print(e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Failed to ${_isEditing ? 'update' : 'add'} transaction. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Failed to ${_isEditing ? 'update' : 'add'} transaction. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -452,12 +465,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (confirmed == true) {
       try {
+        if (!mounted) return;
         await Provider.of<TransactionProvider>(context, listen: false)
             .deleteTransaction(widget.transaction!.id!);
 
+        if (!mounted) return;
         await Provider.of<PersonProvider>(context, listen: false)
             .refreshPersonBalance(widget.person.id!);
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Transaction deleted successfully!'),
@@ -467,13 +483,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
-        print(e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete transaction. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to delete transaction. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

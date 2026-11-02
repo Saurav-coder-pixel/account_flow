@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/person.dart';
 import '../helpers/database_helper.dart';
+import '../models/person.dart';
 
 class PersonProvider with ChangeNotifier {
   Future<void> refreshPersonBalance(int personId) async {

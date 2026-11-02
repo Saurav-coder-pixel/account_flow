@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../widgets/app_drawer.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -10,10 +9,8 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-
   final List<Color> gradientColors =
-  [Colors.green.shade700, Colors.green.shade400];
-
+      [Colors.green.shade700, Colors.green.shade400];
 
   @override
   Widget build(BuildContext context) {

@@ -1,90 +1,69 @@
-# Account Flow
+# Toolbox
 
-A modern, privacy-focused, offline-first ledger and expense management application built with Flutter. Account Flow helps you manage your personal finances and track money owed to and by others with ease and complete privacy.
+A privacy-focused, offline-first multi-tool super application built with Flutter. Toolbox brings together everyday productivity utilities into a clean, modern interface with zero tracking, zero network requirements, and complete on-device privacy.
 
-## Why Account Flow is Different
+## Included Tools
 
-While many financial apps move your data to the cloud and require extensive permissions, Account Flow takes a different approach. We believe your financial data is your own. Our app is designed to be a private, secure, and simple tool that works for you, without compromising on essential features or your privacy. Your data stays on your device, and the app works perfectly without an internet connection.
+1. **Account Flow**  
+   A full-featured personal and business ledger app:
+   - **Personal Cashbook**: Track personal income and expenses.
+   - **Account Ledger**: Track credits and debits with friends, family, or clients.
+   - **Bill Splitting**: Split group expenses easily and automatically sync amounts.
+   - **Built-in Expression Calculator**: Evaluate amounts directly in the input field.
+   - **Multi-Currency**: Configurable currency symbols per user preference.
 
-## Key Features
+2. **Converters**  
+   Offline conversion utilities for documents and media:
+   - Image ➔ PDF (multi-image, page sizing, reordering)
+   - Text ➔ PDF
+   - PDF ➔ Images
+   - Image format conversions (JPG, PNG, WEBP) & compression
 
-- **Separate Personal Cashbook**: Manage your own income and expenses in a dedicated personal ledger.
-- **Account Ledger System**: Easily track credit (money you've given) and debit (money you've taken) with friends, family, or customers.
-- **Split Expenses**: Split bills and group expenses with multiple people. The app handles all the calculations automatically to figure out who owes who.
-- **Built-in Calculator**: Perform calculations directly in the amount entry field, eliminating the need to switch to a separate calculator app.
-- **Automatic Balance Updates**: Balances for each person and the cashbook are updated instantly with every transaction.
-- **Complete History**: View a detailed transaction and split history for each person, providing a clear record of all financial activities.
-- **Clean & Simple UI**: An intuitive and clutter-free user interface that is easy to navigate and use.
+3. **Video Player**  
+   A speed-controlled local video player:
+   - Variable playback speed controls (0.25x – 5x) with preset chips and continuous slider
+   - Volume & brightness gestures
+   - Video library browser with album filtering
+   - Wake-lock retention during playback
+
+4. **Extensible Registry**  
+   Designed with a modular `ToolDefinition` registry (`lib/launcher/tool_registry.dart`) allowing new tools to be plugged in with a single entry.
+
+## Architecture
+
+The codebase is organized into modular features with scoped providers:
+
+```
+lib/
+├── core/                       # Shared theme, constants, and utilities
+├── launcher/                   # Launcher screen, tool cards, and ToolRegistry
+│   ├── launcher_screen.dart
+│   ├── tool_card.dart
+│   └── tool_registry.dart
+├── features/
+│   ├── account_flow/           # Khatabook ledger (scoped providers & screens)
+│   ├── converters/             # Document and image converters
+│   └── video_player/           # Speed-controlled local video player
+└── main.dart                   # Global theme provider and app entry point
+```
 
 ## Privacy & Offline Advantages
 
-- **100% Offline**: No internet connection required. Use the app anywhere, anytime.
-- **Your Data Stays on Your Device**: All financial data is stored locally on your device. We do not collect or have access to your information.
-- **No Unnecessary Permissions**: Account Flow does not require access to your contact list, phone number, or any other private information on your device.
-- **Fast Performance**: Because all data is stored and processed locally, the app is incredibly fast and responsive.
+- **100% Offline**: No network calls, analytics, or remote tracking.
+- **On-Device Storage**: Data is kept securely in local SQLite databases and SharedPreferences.
+- **Fast & Responsive**: Immediate interaction without waiting for network requests.
 
-## Technology Stack
+## Getting Started
 
-- **Framework**: [Flutter](https://flutter.dev/)
-- **Programming Language**: [Dart](https://dart.dev/)
-- **State Management**: [Provider](https://pub.dev/packages/provider)
-- **Database**: Local Storage (e.g., sqflite) for on-device data persistence.
-
-## Project Structure
-
-The project follows a standard Flutter project structure to maintain clean and scalable code.
-
-```
-/
-|- lib/
-|  |- main.dart           # App entry point
-|  |- models/             # Data models (Person, Transaction, etc.)
-|  |- providers/          # State management logic
-|  |- helpers/            # Database and other helper classes
-|  |- screens/            # UI screens for different features
-|  |- widgets/            # Reusable UI components
-|- assets/                 # Static assets like images and icons
-|- android/                # Android-specific files
-|- ios/                    # iOS-specific files
-|- ...                     # Other platform folders
-```
-
-## Target Users
-
-- Individuals looking for a simple tool to track personal expenses.
-- People who frequently lend or borrow money among friends and family.
-- Roommates or groups who need to split household bills and expenses.
-- Small business owners or freelancers who want a basic ledger for customer accounts without the complexity of full accounting software.
-- Anyone who is privacy-conscious and prefers offline-first applications over cloud-based ones.
-
-## Future Improvements
-
-- [ ] Local data backup and restore functionality.
-- [ ] Multi-currency support.
-- [ ] Option to add recurring transactions.
-- [ ] Export transaction history to CSV or PDF formats.
-- [ ] Enhanced reporting with visual charts and graphs.
-
-## Getting Started for Developers
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-To run this project locally:
-
-1.  **Clone the repository:**
-    ```sh
-    git clone <repository-url>
-    ```
-2.  **Install dependencies:**
-    ```sh
-    flutter pub get
-    ```
-3.  **Run the app:**
-    ```sh
-    flutter run
-    ```
+1. **Install dependencies:**
+   ```sh
+   flutter pub get
+   ```
+2. **Run tests:**
+   ```sh
+   flutter test
+   ```
+3. **Run the app:**
+   ```sh
+   flutter run
+   ```

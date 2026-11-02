@@ -1,8 +1,8 @@
-import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/person_provider.dart';
+import '../providers/currency_provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import 'package:intl/intl.dart';
 import 'add_transaction_screen.dart';
@@ -200,8 +200,8 @@ class HistoryScreen extends StatelessWidget {
                     leading: CircleAvatar(
                       radius: 28,
                       backgroundColor: isCredit
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.red.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
                       child: Icon(
                         isCredit
                             ? Icons.arrow_downward_rounded
@@ -254,7 +254,7 @@ class HistoryScreen extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             const Divider(
               height: 20,
               thickness: 1,

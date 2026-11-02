@@ -1,12 +1,13 @@
-import 'package:account_flow/models/person.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/person.dart';
 import '../providers/person_provider.dart';
 
 class AddPersonScreen extends StatefulWidget {
   const AddPersonScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AddPersonScreenState createState() => _AddPersonScreenState();
 }
 
@@ -111,6 +112,8 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
         await Provider.of<PersonProvider>(context, listen: false)
             .addPerson(newPerson);
 
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Account added successfully!'),
@@ -120,12 +123,14 @@ class _AddPersonScreenState extends State<AddPersonScreen> {
 
         Navigator.pop(context, true); // Return true to indicate success
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to add account. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to add account. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

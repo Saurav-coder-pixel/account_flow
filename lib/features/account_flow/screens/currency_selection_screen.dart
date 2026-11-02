@@ -4,11 +4,12 @@ import '../providers/currency_provider.dart';
 import './home_screen.dart';
 
 class CurrencySelectionScreen extends StatefulWidget {
-  static const routeName = '/currency-selection';
+  static const routeName = '/af-currency-selection';
 
   const CurrencySelectionScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CurrencySelectionScreenState createState() =>
       _CurrencySelectionScreenState();
 }
@@ -33,9 +34,9 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
       await currencyProvider.setCurrency(_selectedSymbol!, _selectedCurrency!);
 
       if (mounted) {
-        // Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
       }
     }
   }
@@ -105,7 +106,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                                   horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.green.withOpacity(0.1)
+                                    ? Colors.green.withValues(alpha: 0.1)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -160,7 +161,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           spreadRadius: 2,
                           blurRadius: 5,
                           offset: const Offset(0, 3),

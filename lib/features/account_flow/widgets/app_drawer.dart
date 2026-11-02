@@ -5,6 +5,7 @@ import '../screens/cashbook_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/split_expense_screen.dart';
+import '../../../launcher/launcher_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key, required this.gradientColors});
@@ -48,13 +49,25 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
+          // Back to Toolbox launcher
+          ListTile(
+            leading: const Icon(Icons.apps_rounded),
+            title: const Text('Back to Toolbox'),
+            onTap: () {
+              Navigator.of(context).pop(); // close drawer
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LauncherScreen()),
+                (route) => false,
+              );
+            },
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.home),
             title: const Text('Home'),
             onTap: () {
               Navigator.pop(context);
-              // Avoid pushing a new home screen if we are already there
-              if (ModalRoute.of(context)!.settings.name != '/') {
+              if (ModalRoute.of(context)?.settings.name != '/af-home') {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const HomeScreen()),

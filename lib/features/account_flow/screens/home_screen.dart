@@ -1,8 +1,8 @@
-import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/currency_provider.dart';
 import '../models/transaction.dart';
 import '../models/person.dart';
 import '../widgets/person_card.dart';
@@ -10,10 +10,11 @@ import 'person_detail_screen.dart';
 import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
-  static const routeName = '/home';
+  static const routeName = '/af-home';
   const HomeScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -240,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: colors[0].withOpacity(0.3),
+              color: colors[0].withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -386,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       name: name, createdAt: DateTime.now(), isCashbook: false);
                   await personProvider.addPerson(newPerson);
                   _loadData();
-                  Navigator.pop(context);
+                  if (context.mounted) Navigator.pop(context);
                 }
               },
               child: const Text('Add'),
@@ -433,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   await personProvider
                       .updatePerson(person.copyWith(name: newName));
                   _loadData();
-                  Navigator.pop(context);
+                  if (context.mounted) Navigator.pop(context);
                 }
               },
               child: const Text('Save'),
@@ -469,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 _loadData();
 
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text(

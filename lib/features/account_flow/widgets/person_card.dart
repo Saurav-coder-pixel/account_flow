@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/person.dart';
 import '../providers/person_provider.dart';
+import '../providers/currency_provider.dart';
 
 class PersonCard extends StatelessWidget {
   final Person person;
@@ -19,13 +20,14 @@ class PersonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 2),
@@ -58,7 +60,7 @@ class PersonCard extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
+                        color: Colors.blue.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -104,7 +106,8 @@ class PersonCard extends StatelessWidget {
                         }
 
                         final balance = snapshot.data ?? 0.0;
-                        return _buildBalanceDisplay(balance);
+                        return _buildBalanceDisplay(
+                            balance, currencyProvider.currencySymbol);
                       },
                     );
                   },
@@ -225,7 +228,7 @@ class PersonCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceDisplay(double balance) {
+  Widget _buildBalanceDisplay(double balance, String currencySymbol) {
     final isPositive = balance >= 0;
     final color = isPositive ? Colors.green : Colors.red;
     final icon = isPositive ? Icons.trending_up : Icons.trending_down;
@@ -234,10 +237,10 @@ class PersonCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -251,7 +254,7 @@ class PersonCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '₹${balance.abs().toStringAsFixed(2)}',
+            '$currencySymbol${balance.abs().toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 14,
               color: color,
@@ -263,7 +266,7 @@ class PersonCard extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 11,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               fontWeight: FontWeight.w600,
             ),
           ),

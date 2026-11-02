@@ -5,6 +5,7 @@ import '../models/person.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/currency_provider.dart';
 import './split_history_screen.dart';
 import '../widgets/app_drawer.dart';
 
@@ -12,6 +13,7 @@ class SplitExpenseScreen extends StatefulWidget {
   const SplitExpenseScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SplitExpenseScreenState createState() => _SplitExpenseScreenState();
 }
 
@@ -82,6 +84,8 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
 
     if (!mounted) return;
 
+    final currencySymbol =
+        Provider.of<CurrencyProvider>(context, listen: false).currencySymbol;
     final totalParticipants = otherPersonNames.length + 1;
     final splitAmount = amount / totalParticipants;
     final amountOwedByOthers = splitAmount * otherPersonNames.length;
@@ -90,10 +94,10 @@ class _SplitExpenseScreenState extends State<SplitExpenseScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Confirm Split'),
-        content: Text('Total Expense: ₹${amount.toStringAsFixed(2)}\n'
+        content: Text('Total Expense: $currencySymbol${amount.toStringAsFixed(2)}\n'
             'Split among: $totalParticipants people (including you)\n'
-            'Each person\'s share: ₹${splitAmount.toStringAsFixed(2)}\n\n'
-            'Your personal cashbook will show a debit of ₹${amount.toStringAsFixed(2)} for the full expense, and a credit of ₹${amountOwedByOthers.toStringAsFixed(2)} for the amount owed to you.'),
+            'Each person\'s share: $currencySymbol${splitAmount.toStringAsFixed(2)}\n\n'
+            'Your personal cashbook will show a debit of $currencySymbol${amount.toStringAsFixed(2)} for the full expense, and a credit of $currencySymbol${amountOwedByOthers.toStringAsFixed(2)} for the amount owed to you.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),

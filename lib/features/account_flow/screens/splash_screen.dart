@@ -1,16 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../providers/person_provider.dart';
-import '../providers/transaction_provider.dart';
-import 'home_screen.dart';
-import 'currency_selection_screen.dart';
+import '../../../launcher/launcher_screen.dart';
 
+/// Splash screen for the Toolbox app.
+/// After the animation it navigates to the Launcher (not directly to Account Flow).
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
@@ -75,27 +73,13 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isCurrencySelected = prefs.getBool('isCurrencySelected') ?? false;
-
-    // Ensure the animation runs for a minimum duration while data loads.
-    final dataLoader = Future.wait([
-      Provider.of<PersonProvider>(context, listen: false).loadPersons(),
-      Provider.of<TransactionProvider>(context, listen: false)
-          .loadAllTransactions(),
-    ]);
-
-    final timer = Future.delayed(const Duration(seconds: 3));
-
-    await Future.wait([dataLoader, timer]);
+    // Minimum splash duration
+    await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
-      if (isCurrencySelected) {
-        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
-      } else {
-        Navigator.of(context)
-            .pushReplacementNamed(CurrencySelectionScreen.routeName);
-      }
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LauncherScreen()),
+      );
     }
   }
 
@@ -103,9 +87,9 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Theme.of(context).primaryColor, Colors.blue.shade400],
+            colors: [Color(0xFF4F6AF5), Color(0xFF7B9CF5)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -122,19 +106,19 @@ class _SplashScreenState extends State<SplashScreen>
                     padding: const EdgeInsets.all(25),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         )
                       ],
                     ),
-                    child: Icon(
-                      Icons.account_balance_wallet_outlined,
+                    child: const Icon(
+                      Icons.construction_rounded,
                       size: 70,
-                      color: Theme.of(context).primaryColor,
+                      color: Color(0xFF4F6AF5),
                     ),
                   ),
                 ),
@@ -143,7 +127,7 @@ class _SplashScreenState extends State<SplashScreen>
               SlideTransition(
                 position: _titleSlideAnimation,
                 child: const Text(
-                  'Account Flow',
+                  'Toolbox',
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
@@ -156,10 +140,10 @@ class _SplashScreenState extends State<SplashScreen>
               SlideTransition(
                 position: _subtitleSlideAnimation,
                 child: Text(
-                  'Your Financial Compass',
+                  'Your All-in-One Toolkit',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart' as app_transaction;
+import '../providers/currency_provider.dart';
 
 class TransactionCard extends StatelessWidget {
   final app_transaction.Transaction transaction;
@@ -16,6 +18,7 @@ class TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     final isCredit = transaction.type == app_transaction.TransactionType.credit;
     final alignment =
         isCredit ? Alignment.centerLeft : Alignment.centerRight;
@@ -30,7 +33,7 @@ class TransactionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -54,7 +57,7 @@ class TransactionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '₹${transaction.amount.toInt()}',
+                  '${currencyProvider.currencySymbol}${transaction.amount.toInt()}',
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

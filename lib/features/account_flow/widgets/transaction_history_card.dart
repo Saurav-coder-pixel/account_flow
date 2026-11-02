@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/person_provider.dart';
+import '../providers/currency_provider.dart';
 
 class TransactionHistoryCard extends StatelessWidget {
   final dynamic transaction;
@@ -17,6 +19,7 @@ class TransactionHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     final isCredit = transaction.type == app_transaction.TransactionType.credit;
     final color = isCredit ? Colors.green : Colors.red;
 
@@ -24,7 +27,7 @@ class TransactionHistoryCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(
             isCredit ? Icons.add : Icons.remove,
             color: color,
@@ -47,7 +50,7 @@ class TransactionHistoryCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '₹${transaction.amount.toStringAsFixed(2)}',
+                      '${currencyProvider.currencySymbol}${transaction.amount.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -59,7 +62,7 @@ class TransactionHistoryCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(

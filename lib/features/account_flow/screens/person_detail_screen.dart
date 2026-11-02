@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/person.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/currency_provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import 'add_transaction_screen.dart';
 import '../widgets/transaction_card.dart';
@@ -14,6 +15,7 @@ class PersonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     return Consumer<TransactionProvider>(
       builder: (context, transactionProvider, child) {
         final personTransactions =
@@ -51,7 +53,8 @@ class PersonDetailScreen extends StatelessWidget {
           ),
           body: Column(
             children: [
-              _buildSummaryHeader(totalCredit, totalDebit, balance),
+              _buildSummaryHeader(
+                  totalCredit, totalDebit, balance, currencyProvider.currencySymbol),
               const Divider(height: 1),
               Expanded(
                 child: personTransactions.isEmpty
@@ -79,7 +82,8 @@ class PersonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryHeader(double credit, double debit, double balance) {
+  Widget _buildSummaryHeader(
+      double credit, double debit, double balance, String currencySymbol) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.grey.shade50,
@@ -87,9 +91,11 @@ class PersonDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              _buildSummaryItem("You will give", credit, Colors.green),
+              _buildSummaryItem(
+                  "You will give", credit, Colors.green, currencySymbol),
               const SizedBox(width: 16),
-              _buildSummaryItem("You will get", debit, Colors.red),
+              _buildSummaryItem(
+                  "You will get", debit, Colors.red, currencySymbol),
             ],
           ),
           const SizedBox(height: 16),
@@ -117,7 +123,7 @@ class PersonDetailScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  "₹${balance.abs().toStringAsFixed(2)} ${balance >= 0 ? '(You will give)' : '(You will get)'}",
+                  "$currencySymbol${balance.abs().toStringAsFixed(2)} ${balance >= 0 ? '(You will give)' : '(You will get)'}",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -134,7 +140,8 @@ class PersonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, double amount, Color color) {
+  Widget _buildSummaryItem(
+      String label, double amount, Color color, String currencySymbol) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -150,7 +157,7 @@ class PersonDetailScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             const SizedBox(height: 4),
             Text(
-              "₹${amount.toStringAsFixed(2)}",
+              "$currencySymbol${amount.toStringAsFixed(2)}",
               style: TextStyle(
                   fontSize: 16, fontWeight: FontWeight.bold, color: color),
             ),
@@ -169,8 +176,9 @@ class PersonDetailScreen extends StatelessWidget {
     }
 
     // Sort transactions chronologically for grouping
-    final sortedTransactions = List<app_transaction.Transaction>.from(transactions)
-      ..sort((a, b) => a.date.compareTo(b.date));
+    final sortedTransactions =
+        List<app_transaction.Transaction>.from(transactions)
+          ..sort((a, b) => a.date.compareTo(b.date));
 
     final List<Widget> items = [];
     DateTime? lastTimestamp;
@@ -203,13 +211,13 @@ class PersonDetailScreen extends StatelessWidget {
             );
           },
           background: Container(
-            color: Colors.red.withOpacity(0.1),
+            color: Colors.red.withValues(alpha: 0.1),
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: const Icon(Icons.delete, color: Colors.red),
           ),
           secondaryBackground: Container(
-            color: Colors.red.withOpacity(0.1),
+            color: Colors.red.withValues(alpha: 0.1),
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: const Icon(Icons.delete, color: Colors.red),

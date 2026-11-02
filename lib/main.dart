@@ -1,51 +1,30 @@
-import 'package:account_flow/providers/currency_provider.dart';
-import 'package:account_flow/screens/currency_selection_screen.dart';
-import 'package:account_flow/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/person_provider.dart';
-import 'providers/transaction_provider.dart';
-import 'providers/theme_provider.dart';
-import 'screens/splash_screen.dart';
+import 'core/theme.dart';
+import 'features/account_flow/providers/theme_provider.dart';
+import 'features/account_flow/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final currencyProvider = CurrencyProvider();
-  await currencyProvider.loadCurrency();
-  runApp(MyApp(currencyProvider: currencyProvider));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final CurrencyProvider currencyProvider;
-  const MyApp({super.key, required this.currencyProvider});
+  final Widget? home;
+  const MyApp({super.key, this.home});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => PersonProvider()),
-        ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider.value(value: currencyProvider),
-      ],
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'Account Flow',
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              useMaterial3: true,
-            ),
-            darkTheme: ThemeData.dark().copyWith(
-              primaryColor: Colors.blue,
-            ),
+            title: 'Toolbox',
+            theme: lightTheme(),
+            darkTheme: darkTheme(),
             themeMode: themeProvider.themeMode,
-            home: const SplashScreen(),
-            routes: {
-              HomeScreen.routeName: (context) => const HomeScreen(),
-              CurrencySelectionScreen.routeName: (context) =>
-                  const CurrencySelectionScreen(),
-            },
+            home: home ?? const SplashScreen(),
             debugShowCheckedModeBanner: false,
           );
         },

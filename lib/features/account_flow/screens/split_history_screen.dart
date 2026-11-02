@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/currency_provider.dart';
 
 class SplitHistoryScreen extends StatelessWidget {
   const SplitHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Split History'),
@@ -144,7 +146,7 @@ class SplitHistoryScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 16),
                             Text(
-                              '₹${totalAmount.toStringAsFixed(2)}',
+                              '${currencyProvider.currencySymbol}${totalAmount.toStringAsFixed(2)}',
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineSmall
@@ -212,6 +214,8 @@ class SplitHistoryScreen extends StatelessWidget {
   Future<List<Widget>> _buildParticipantList(BuildContext context,
       List<app_transaction.Transaction> transactions) async {
     final personProvider = Provider.of<PersonProvider>(context, listen: false);
+    final currencyProvider =
+        Provider.of<CurrencyProvider>(context, listen: false);
     final participants = <Widget>[];
 
     for (var transaction in transactions) {
@@ -236,7 +240,8 @@ class SplitHistoryScreen extends StatelessWidget {
                 Expanded(
                     child: Text(person.name,
                         style: const TextStyle(fontSize: 16))),
-                Text('₹${transaction.amount.toStringAsFixed(2)}',
+                Text(
+                    '${currencyProvider.currencySymbol}${transaction.amount.toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w500)),
               ],

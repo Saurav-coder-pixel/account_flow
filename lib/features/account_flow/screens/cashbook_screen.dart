@@ -1,4 +1,3 @@
-import 'package:account_flow/providers/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +5,7 @@ import '../models/person.dart';
 import '../models/transaction.dart' as app_transaction;
 import '../providers/person_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/currency_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class CashbookScreen extends StatelessWidget {
@@ -142,9 +142,6 @@ class CashbookScreen extends StatelessWidget {
 
   SliverToBoxAdapter _buildSummaryCards(double totalIncome, double totalExpense,
       double balance, String currencySymbol) {
-    final List<Color> gradientColors = balance >= 0
-        ? [Colors.green.shade700, Colors.green.shade400]
-        : [Colors.red.shade700, Colors.red.shade400];
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -179,7 +176,7 @@ class CashbookScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: colors[0].withOpacity(0.3),
+              color: colors[0].withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -322,8 +319,8 @@ class CashbookScreen extends StatelessWidget {
                 leading: CircleAvatar(
                   radius: 25,
                   backgroundColor: isIncome
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   child: Icon(
                     isIncome
                         ? Icons.arrow_upward_rounded
@@ -407,15 +404,18 @@ class CashbookScreen extends StatelessWidget {
                       decoration: InputDecoration(
                           labelText: 'Amount',
                           prefixText: currencySymbol,
-                          border: OutlineInputBorder()),
+                          border: const OutlineInputBorder()),
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Please enter an amount.';
-                        if (double.tryParse(value) == null)
+                        }
+                        if (double.tryParse(value) == null) {
                           return 'Please enter a valid number.';
-                        if (double.parse(value) <= 0)
+                        }
+                        if (double.parse(value) <= 0) {
                           return 'Please enter an amount greater than zero.';
+                        }
                         return null;
                       },
                     ),
@@ -429,9 +429,10 @@ class CashbookScreen extends StatelessWidget {
                           selected: selectedType ==
                               app_transaction.TransactionType.credit,
                           onSelected: (selected) {
-                            if (selected)
+                            if (selected) {
                               setState(() => selectedType =
                                   app_transaction.TransactionType.credit);
+                            }
                           },
                           selectedColor: Colors.green.shade100,
                         ),
@@ -440,9 +441,10 @@ class CashbookScreen extends StatelessWidget {
                           selected: selectedType ==
                               app_transaction.TransactionType.debit,
                           onSelected: (selected) {
-                            if (selected)
+                            if (selected) {
                               setState(() => selectedType =
                                   app_transaction.TransactionType.debit);
+                            }
                           },
                           selectedColor: Colors.red.shade100,
                         ),
